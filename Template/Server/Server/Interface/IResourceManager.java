@@ -208,4 +208,34 @@ public interface IResourceManager extends Remote
      */
     public String getName()
         throws RemoteException;
+
+    /**
+     * Cancel a room reservation at this location
+     * @param customerID
+     * @param location
+     * @return
+     * @throws RemoteException
+     */
+    public boolean cancelRoomReservation(int customerID, String location)
+            throws RemoteException;
+
+    /**
+     * Cancel a car reservation at this location
+     * @param customerID
+     * @param location
+     * @return
+     * @throws RemoteException
+     */
+    boolean cancelCarReservation(int customerID, String location)
+            throws RemoteException;
+
+    /**
+     * Cancel a flight reservation
+     * @param customerID
+     * @param f
+     * @return
+     * @throws RemoteException
+     */
+    boolean cancelFlightReservation(int customerID, Integer f)
+            throws RemoteException;
 }

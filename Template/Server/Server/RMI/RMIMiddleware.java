@@ -6,6 +6,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.Vector;
 
 public class RMIMiddleware implements IResourceManager {
@@ -47,6 +48,11 @@ public class RMIMiddleware implements IResourceManager {
         return flightRM.queryFlightPrice(flightNumber);
     }
 
+    @Override
+    public boolean cancelFlightReservation(int customerID, Integer f) throws RemoteException {
+        return flightRM.cancelFlightReservation(customerID, f);
+    }
+
     // -------------------- Car --------------------
     @Override
     public boolean addCars(String location, int count, int price) throws RemoteException {
@@ -66,6 +72,11 @@ public class RMIMiddleware implements IResourceManager {
     @Override
     public int queryCarsPrice(String location) throws RemoteException {
         return carRM.queryCarsPrice(location);
+    }
+
+    @Override
+    public boolean cancelCarReservation(int customerID, String location) throws RemoteException {
+        return carRM.cancelCarReservation(customerID, location);
     }
 
     // -------------------- Room --------------------
@@ -92,6 +103,11 @@ public class RMIMiddleware implements IResourceManager {
     @Override
     public int queryRoomsPrice(String location) throws RemoteException {
         return roomRM.queryRoomsPrice(location);
+    }
+
+    @Override
+    public boolean cancelRoomReservation(int customerID, String location) throws RemoteException {
+        return roomRM.cancelRoomReservation(customerID, location);
     }
 
     // -------------------- Customer --------------------
@@ -127,30 +143,103 @@ public class RMIMiddleware implements IResourceManager {
     }
 
     @Override
-    // haven't achieve roll back, and test for concurrency
     public boolean bundle(int customerID, Vector<String> flightNumbers,
                           String location, boolean car, boolean room) throws RemoteException {
-        // Example: first reserve all flights, then optional car/room
-        boolean success = true;
-        for (String f : flightNumbers) {
-            if (!flightRM.reserveFlight(customerID, Integer.parseInt(f))) {
-                success = false;
+
+        Vector<Integer> reservedFlights = new Vector<>();
+        boolean carReserved = false;
+        boolean roomReserved = false;
+
+        try {
+            // Reserve flights first
+            for (String f : flightNumbers) {
+                int flightNum = Integer.parseInt(f);
+                if (flightRM.reserveFlight(customerID, flightNum)) {
+                    reservedFlights.add(flightNum);
+                } else {
+                    boolean rolledBack = rollbackReservations(customerID, reservedFlights, carReserved, roomReserved, location);
+                    if (!rolledBack) {
+                        System.err.println("[WARN] Rollback failed after flight reservation failure!");
+                    }
+                    return false;
+                }
             }
+
+            // Reserve car
+            if (car) {
+                carReserved = carRM.reserveCar(customerID, location);
+                if (!carReserved) {
+                    boolean rolledBack = rollbackReservations(customerID, reservedFlights, carReserved, roomReserved, location);
+                    if (!rolledBack) {
+                        System.err.println("[WARN] Rollback failed after car reservation failure!");
+                    }
+                    return false;
+                }
+            }
+
+            // Reserve room
+            if (room) {
+                roomReserved = roomRM.reserveRoom(customerID, location);
+                if (!roomReserved) {
+                    boolean rolledBack = rollbackReservations(customerID, reservedFlights, carReserved, roomReserved, location);
+                    if (!rolledBack) {
+                        System.err.println("[WARN] Rollback failed after room reservation failure!");
+                    }
+                    return false;
+                }
+            }
+
+            return true; // success
+        } catch (RemoteException e) {
+            boolean rolledBack = rollbackReservations(customerID, reservedFlights, carReserved, roomReserved, location);
+            if (!rolledBack) {
+                System.err.println("[ERROR] Rollback failed due to RemoteException during bundle!");
+            }
+            throw e; // propagate exception
         }
-        if (car) {
-            success = success && carRM.reserveCar(customerID, location);
-        }
-        if (room) {
-            success = success && roomRM.reserveRoom(customerID, location);
-        }
-        return success;
     }
+
+
+    private boolean rollbackReservations(int customerID,
+                                         Vector<Integer> reservedFlights,
+                                         boolean carReserved,
+                                         boolean roomReserved,
+                                         String location) {
+        boolean rollbackSuccess = true;
+
+        try {
+            // Undo flights
+            for (Integer f : reservedFlights) {
+                boolean result = flightRM.cancelFlightReservation(customerID, f);
+                if (!result) rollbackSuccess = false;
+            }
+
+            // Undo car
+            if (carReserved) {
+                boolean result = carRM.cancelCarReservation(customerID, location);
+                if (!result) rollbackSuccess = false;
+            }
+
+            // Undo room
+            if (roomReserved) {
+                boolean result = roomRM.cancelRoomReservation(customerID, location);
+                if (!result) rollbackSuccess = false;
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+            rollbackSuccess = false;
+        }
+
+        return rollbackSuccess;
+    }
+
 
     // -------------------- Misc --------------------
     @Override
     public String getName() throws RemoteException {
         return s_serverName;
     }
+
 
     public static void main(String[] args) {
         try {

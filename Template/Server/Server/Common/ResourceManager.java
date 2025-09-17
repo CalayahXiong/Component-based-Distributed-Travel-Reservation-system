@@ -383,5 +383,20 @@ public class ResourceManager implements IResourceManager
 	{
 		return m_name;
 	}
+
+	@Override
+	public boolean cancelRoomReservation(int customerID, String location) throws RemoteException {
+		return false;
+	}
+
+	@Override
+	public boolean cancelCarReservation(int customerID, String location) throws RemoteException {
+		return false;
+	}
+
+	@Override
+	public boolean cancelFlightReservation(int customerID, Integer f) throws RemoteException {
+		return false;
+	}
 }
  

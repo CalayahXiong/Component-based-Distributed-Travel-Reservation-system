@@ -66,6 +66,11 @@ public class CarResourceManager extends ResourceManager {
         throw new UnsupportedOperationException("CarResourceManager cannot reserve flights.");
     }
 
+    @Override
+    public boolean cancelFlightReservation(int customerID, Integer f) throws RemoteException {
+        throw new UnsupportedOperationException("CarResourceManager cannot cancel flight reservation.");
+    }
+
     // -------------------------
     // Unsupported room methods
     // -------------------------
@@ -95,6 +100,11 @@ public class CarResourceManager extends ResourceManager {
         throw new UnsupportedOperationException("CarResourceManager cannot reserve rooms.");
     }
 
+    @Override
+    public boolean cancelRoomReservation(int customerID, String location) throws RemoteException {
+        throw new UnsupportedOperationException("CarResourceManager cannot cancel room reservation.");
+    }
+
     // -------------------------
     // Customer methods (optional: keep or throw)
     // -------------------------
@@ -118,6 +128,8 @@ public class CarResourceManager extends ResourceManager {
     public boolean deleteCustomer(int customerID) throws RemoteException {
         throw new UnsupportedOperationException("CarResourceManager does not manage customers.");
     }
+
+
 
     // -------------------------
     // Bundle method (MW handles this)

@@ -37,6 +37,11 @@ public class FlightResourceManager extends ResourceManager {
         return super.reserveFlight(customerID, flightNum);
     }
 
+    @Override
+    public boolean cancelFlightReservation(int customerID, Integer f) throws RemoteException {
+        return super.cancelFlightReservation(customerID, f);
+    }
+
     // -------------------------
     // Unsupported car methods
     // -------------------------
@@ -66,6 +71,10 @@ public class FlightResourceManager extends ResourceManager {
         throw new UnsupportedOperationException("FlightResourceManager cannot reserve cars.");
     }
 
+    @Override
+    public boolean cancelCarReservation(int customerID, String location) throws RemoteException {
+        throw new UnsupportedOperationException("FlightResourceManager cannot cancel car reservation.");
+    }
     // -------------------------
     // Unsupported room methods
     // -------------------------
@@ -93,6 +102,11 @@ public class FlightResourceManager extends ResourceManager {
     @Override
     public boolean reserveRoom(int customerID, String location) throws RemoteException {
         throw new UnsupportedOperationException("FlightResourceManager cannot reserve rooms.");
+    }
+
+    @Override
+    public boolean cancelRoomReservation(int customerID, String location) throws RemoteException {
+        throw new UnsupportedOperationException("FlightResourceManager cannot cancel room reservation.");
     }
 
     // -------------------------
