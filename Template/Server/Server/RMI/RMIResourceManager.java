@@ -19,7 +19,7 @@ import java.rmi.server.UnicastRemoteObject;
 public class RMIResourceManager extends ResourceManager 
 {
 	private static String s_serverName = "Server";
-	private static String s_rmiPrefix = "group_20_";
+	private static String s_rmiPrefix = "group_35_";
 
 	public static void main(String args[])
 	{

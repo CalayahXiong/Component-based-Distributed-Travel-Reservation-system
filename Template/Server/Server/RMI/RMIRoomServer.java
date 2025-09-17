@@ -1,6 +1,6 @@
 package Server.RMI;
 
-import Server.Common.CarResourceManager;
+import Server.Common.RoomResourceManager;
 import Server.Interface.IResourceManager;
 
 import java.rmi.RemoteException;
@@ -8,7 +8,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
-public class RMIRoomServer extends CarResourceManager {
+public class RMIRoomServer extends RoomResourceManager {
 
     public RMIRoomServer(String p_name) {
         super(p_name);
