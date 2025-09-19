@@ -1,5 +1,7 @@
 package Server.RMI;
 
+import Server.Common.LockManager;
+import Server.Common.TransactionalManager;
 import Server.Interface.IMiddleware;
 import Server.Interface.IResourceManager;
 
@@ -19,12 +21,17 @@ public class RMIMiddleware implements IMiddleware {
     private IResourceManager roomRM;
     private IResourceManager customerRM;
 
+    //
+    private TransactionalManager TM;
+    private LockManager LM;
+
     public RMIMiddleware(IResourceManager flight, IResourceManager car,
                          IResourceManager room, IResourceManager customer) {
         this.flightRM = flight;
         this.carRM = car;
         this.roomRM = room;
         this.customerRM = customer;
+
     }
 
     // -------------------- Flight --------------------

@@ -238,4 +238,13 @@ public interface IResourceManager extends Remote
      */
     boolean cancelFlightReservation(int customerID, Integer f)
             throws RemoteException;
+
+    public boolean prepare(int transactionalID)
+        throws RemoteException;
+
+    public boolean commit(int transactionalID)
+        throws RemoteException;
+
+    public boolean abort(int transactionalID)
+        throws RemoteException;
 }

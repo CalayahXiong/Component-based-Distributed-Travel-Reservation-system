@@ -398,5 +398,20 @@ public class ResourceManager implements IResourceManager
 	public boolean cancelFlightReservation(int customerID, Integer f) throws RemoteException {
 		return false;
 	}
+
+	@Override
+	public boolean prepare(int transactionalID) throws RemoteException {
+		return false;
+	}
+
+	@Override
+	public boolean commit(int transactionalID) throws RemoteException {
+		return false;
+	}
+
+	@Override
+	public boolean abort(int transactionalID) throws RemoteException {
+		return false;
+	}
 }
  
