@@ -23,7 +23,7 @@ public class RMIMiddleware implements IMiddleware {
 
     //
     private TransactionalManager TM;
-    private LockManager LM;
+    //private LockManager LM;
 
     public RMIMiddleware(IResourceManager flight, IResourceManager car,
                          IResourceManager room, IResourceManager customer) {
@@ -31,7 +31,8 @@ public class RMIMiddleware implements IMiddleware {
         this.carRM = car;
         this.roomRM = room;
         this.customerRM = customer;
-
+        TM = new TransactionalManager();
+        //LM = new LockManager();
     }
 
     // -------------------- Flight --------------------
@@ -133,7 +134,7 @@ public class RMIMiddleware implements IMiddleware {
         return customerRM.queryCustomerInfo(customerID);
     }
 
-    // -------------------- Bundle (跨 RM 的逻辑) --------------------
+    // -------------------- Bundle (operate among RMs) --------------------
     @Override
     public boolean bundle(int customerID, Vector<String> flightNumbers,
                           String location, boolean car, boolean room) throws RemoteException {

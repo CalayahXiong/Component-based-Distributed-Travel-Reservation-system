@@ -239,12 +239,32 @@ public interface IResourceManager extends Remote
     boolean cancelFlightReservation(int customerID, Integer f)
             throws RemoteException;
 
+    /**
+     * Check the resource locked status & availability.
+     * If these two are ok, then write the modification into log, return yes.
+     * Else return false.
+     * @param transactionalID
+     * @return
+     * @throws RemoteException
+     */
     public boolean prepare(int transactionalID)
         throws RemoteException;
 
+    /**
+     * Update the modification to DB and release lock.
+     * @param transactionalID
+     * @return
+     * @throws RemoteException
+     */
     public boolean commit(int transactionalID)
         throws RemoteException;
 
+    /**
+     * Rollback the previous resources and release the lock.
+     * @param transactionalID
+     * @return
+     * @throws RemoteException
+     */
     public boolean abort(int transactionalID)
         throws RemoteException;
 }

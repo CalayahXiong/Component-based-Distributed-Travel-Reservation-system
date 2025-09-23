@@ -16,12 +16,15 @@ public class ResourceManager implements IResourceManager
 	protected String m_name = "";
 	protected RMHashMap m_data = new RMHashMap();
 
+	protected LockManager LM = new LockManager();
+	protected Map<Integer, Map<String, RMItem>> transactionData = new HashMap<>();
+
 	public ResourceManager(String p_name)
 	{
 		m_name = p_name;
 	}
 
-	// Reads a data item
+	// Reads a clone from global m_data(no locks)
 	protected RMItem readData(String key)
 	{
 		synchronized(m_data) {
