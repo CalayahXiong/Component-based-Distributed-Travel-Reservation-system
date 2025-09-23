@@ -11,7 +11,7 @@ import java.rmi.UnmarshalException;
 
 public abstract class Client {
 	IMiddleware m_middleware = null;
-	int currentTid = -1;   // 当前事务 ID
+	int currentTid = -1;
 
 	public Client() {
 		super();
