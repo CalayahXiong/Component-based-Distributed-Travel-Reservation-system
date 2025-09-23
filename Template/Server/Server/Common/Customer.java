@@ -93,5 +93,30 @@ public class Customer extends RMItem
 		obj.m_reservations = (RMHashMap)m_reservations.clone();
 		return obj;
 	}
+
+	public boolean hasReserved(String key) {
+		ReservedItem reservedItem = getReservedItem(key);
+		return reservedItem != null && reservedItem.getCount() > 0;
+	}
+
+	public void cancelReservation(String key, String location, int price) {
+		ReservedItem reservedItem = getReservedItem(key);
+		if (reservedItem == null) {
+			return; // nothing to cancel
+		}
+
+		int count = reservedItem.getCount();
+		if (count <= 1) {
+			// remove reservation entirely
+			m_reservations.remove(key);
+		} else {
+			// decrease count
+			reservedItem.setCount(count - 1);
+			// keep last known price (optional: could update here)
+			reservedItem.setPrice(price);
+			m_reservations.put(reservedItem.getKey(), reservedItem);
+		}
+	}
+
 }
 

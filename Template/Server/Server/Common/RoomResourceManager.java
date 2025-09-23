@@ -13,28 +13,28 @@ public class RoomResourceManager extends ResourceManager {
     // -------------------------
 
     @Override
-    public boolean addRooms(String location, int count, int price) throws RemoteException {
-        return super.addRooms(location, count, price);
+    public boolean addRooms(int tid, String location, int count, int price) throws RemoteException {
+        return super.addRooms(tid, location, count, price);
     }
 
     @Override
-    public boolean deleteRooms(String location) throws RemoteException {
-        return super.deleteRooms(location);
+    public boolean deleteRooms(int tid, String location) throws RemoteException {
+        return super.deleteRooms(tid, location);
     }
 
     @Override
-    public int queryRooms(String location) throws RemoteException {
-        return super.queryRooms(location);
+    public int queryRooms(int tid, String location) throws RemoteException {
+        return super.queryRooms(tid, location);
     }
 
     @Override
-    public int queryRoomsPrice(String location) throws RemoteException {
-        return super.queryRoomsPrice(location);
+    public int queryRoomsPrice(int tid, String location) throws RemoteException {
+        return super.queryRoomsPrice(tid, location);
     }
 
     @Override
-    public boolean reserveRoom(int customerID, String location) throws RemoteException {
-        return super.reserveRoom(customerID, location);
+    public boolean reserveRoom(int tid, int customerID, String location) throws RemoteException {
+        return super.reserveRoom(tid, customerID, location);
     }
 
     // -------------------------
@@ -42,32 +42,32 @@ public class RoomResourceManager extends ResourceManager {
     // -------------------------
 
     @Override
-    public boolean addFlight(int flightNum, int flightSeats, int flightPrice) throws RemoteException {
+    public boolean addFlight(int tid, int flightNum, int flightSeats, int flightPrice) throws RemoteException {
         throw new UnsupportedOperationException("RoomResourceManager cannot add flights.");
     }
 
     @Override
-    public boolean deleteFlight(int flightNum) throws RemoteException {
+    public boolean deleteFlight(int tid, int flightNum) throws RemoteException {
         throw new UnsupportedOperationException("RoomResourceManager cannot delete flights.");
     }
 
     @Override
-    public int queryFlight(int flightNum) throws RemoteException {
+    public int queryFlight(int tid, int flightNum) throws RemoteException {
         throw new UnsupportedOperationException("RoomResourceManager cannot query flights.");
     }
 
     @Override
-    public int queryFlightPrice(int flightNum) throws RemoteException {
+    public int queryFlightPrice(int tid, int flightNum) throws RemoteException {
         throw new UnsupportedOperationException("RoomResourceManager cannot query flight prices.");
     }
 
     @Override
-    public boolean reserveFlight(int customerID, int flightNum) throws RemoteException {
+    public boolean reserveFlight(int tid, int customerID, int flightNum) throws RemoteException {
         throw new UnsupportedOperationException("RoomResourceManager cannot reserve flights.");
     }
 
     @Override
-    public boolean cancelFlightReservation(int customerID, Integer f) throws RemoteException {
+    public boolean cancelFlightReservation(int tid, int customerID, Integer f) throws RemoteException {
         throw new UnsupportedOperationException("RoomResourceManager cannot cancel flight reservation.");
     }
 
@@ -76,32 +76,32 @@ public class RoomResourceManager extends ResourceManager {
     // -------------------------
 
     @Override
-    public boolean addCars(String location, int count, int price) throws RemoteException {
+    public boolean addCars(int tid, String location, int count, int price) throws RemoteException {
         throw new UnsupportedOperationException("RoomResourceManager cannot add cars.");
     }
 
     @Override
-    public boolean deleteCars(String location) throws RemoteException {
+    public boolean deleteCars(int tid, String location) throws RemoteException {
         throw new UnsupportedOperationException("RoomResourceManager cannot delete cars.");
     }
 
     @Override
-    public int queryCars(String location) throws RemoteException {
+    public int queryCars(int tid, String location) throws RemoteException {
         throw new UnsupportedOperationException("RoomResourceManager cannot query cars.");
     }
 
     @Override
-    public int queryCarsPrice(String location) throws RemoteException {
+    public int queryCarsPrice(int tid, String location) throws RemoteException {
         throw new UnsupportedOperationException("RoomResourceManager cannot query car prices.");
     }
 
     @Override
-    public boolean reserveCar(int customerID, String location) throws RemoteException {
+    public boolean reserveCar(int tid, int customerID, String location) throws RemoteException {
         throw new UnsupportedOperationException("RoomResourceManager cannot reserve cars.");
     }
 
     @Override
-    public boolean cancelCarReservation(int customerID, String location) throws RemoteException {
+    public boolean cancelCarReservation(int tid, int customerID, String location) throws RemoteException {
         throw new UnsupportedOperationException("RoomResourceManager cannot cancel car reservation.");
     }
 
@@ -110,32 +110,27 @@ public class RoomResourceManager extends ResourceManager {
     // -------------------------
 
     @Override
-    public String queryCustomerInfo(int customerID) throws RemoteException {
+    public String queryCustomerInfo(int tid, int customerID) throws RemoteException {
         throw new UnsupportedOperationException("RoomResourceManager does not manage customers.");
     }
 
     @Override
-    public int newCustomer() throws RemoteException {
+    public boolean newCustomer(int tid, int customerID) throws RemoteException {
         throw new UnsupportedOperationException("RoomResourceManager does not manage customers.");
     }
 
     @Override
-    public boolean newCustomer(int customerID) throws RemoteException {
-        throw new UnsupportedOperationException("RoomResourceManager does not manage customers.");
-    }
-
-    @Override
-    public boolean deleteCustomer(int customerID) throws RemoteException {
+    public boolean deleteCustomer(int tid,  int customerID) throws RemoteException {
         throw new UnsupportedOperationException("RoomResourceManager does not manage customers.");
     }
 
     // -------------------------
     // Bundle method (MW handles this)
     // -------------------------
-
-    @Override
-    public boolean bundle(int customerId, java.util.Vector<String> flightNumbers,
-                          String location, boolean car, boolean room) throws RemoteException {
-        throw new UnsupportedOperationException("RoomResourceManager does not handle bundles. Middleware should coordinate bundles.");
-    }
+//
+//    @Override
+//    public boolean bundle(int tid, int customerId, java.util.Vector<String> flightNumbers,
+//                          String location, boolean car, boolean room) throws RemoteException {
+//        throw new UnsupportedOperationException("RoomResourceManager does not handle bundles. Middleware should coordinate bundles.");
+//    }
 }

@@ -21,8 +21,18 @@ import java.util.*;
  * has succeeded.
  */
 
-public interface IResourceManager extends Remote 
+public interface IResourceManager extends Remote
 {
+
+    /**
+     * Convenience for probing the resource manager.
+     *
+     * @return Name
+     */
+    public String getName()
+            throws RemoteException;
+
+    //-----------------------------------------Flight------------------------------------
     /**
      * Add seats to a flight.
      *
@@ -33,46 +43,8 @@ public interface IResourceManager extends Remote
      *
      * @return Success
      */
-    public boolean addFlight(int flightNum, int flightSeats, int flightPrice) 
-	throws RemoteException; 
-    
-    /**
-     * Add car at a location.
-     *
-     * This should look a lot like addFlight, only keyed on a string location
-     * instead of a flight number.
-     *
-     * @return Success
-     */
-    public boolean addCars(String location, int numCars, int price) 
-	throws RemoteException; 
-   
-    /**
-     * Add room at a location.
-     *
-     * This should look a lot like addFlight, only keyed on a string location
-     * instead of a flight number.
-     *
-     * @return Success
-     */
-    public boolean addRooms(String location, int numRooms, int price) 
-	throws RemoteException; 			    
-			    
-    /**
-     * Add customer.
-     *
-     * @return Unique customer identifier
-     */
-    public int newCustomer() 
-	throws RemoteException; 
-    
-    /**
-     * Add customer with id.
-     *
-     * @return Success
-     */
-    public boolean newCustomer(int cid)
-        throws RemoteException;
+    public boolean addFlight(int tid, int flightNum, int flightSeats, int flightPrice)
+	throws RemoteException;
 
     /**
      * Delete the flight.
@@ -81,152 +53,32 @@ public interface IResourceManager extends Remote
      * reservation on the flight, then the flight cannot be deleted
      *
      * @return Success
-     */   
-    public boolean deleteFlight(int flightNum) 
-	throws RemoteException; 
-    
-    /**
-     * Delete all cars at a location.
-     *
-     * It may not succeed if there are reservations for this location
-     *
-     * @return Success
-     */		    
-    public boolean deleteCars(String location) 
-	throws RemoteException; 
-
-    /**
-     * Delete all rooms at a location.
-     *
-     * It may not succeed if there are reservations for this location.
-     *
-     * @return Success
      */
-    public boolean deleteRooms(String location) 
-	throws RemoteException; 
-    
-    /**
-     * Delete a customer and associated reservations.
-     *
-     * @return Success
-     */
-    public boolean deleteCustomer(int customerID) 
-	throws RemoteException; 
+    public boolean deleteFlight(int tid, int flightNum)
+            throws RemoteException;
 
     /**
      * Query the status of a flight.
      *
      * @return Number of empty seats
      */
-    public int queryFlight(int flightNumber) 
-	throws RemoteException; 
+    public int queryFlight(int tid, int flightNumber)
+            throws RemoteException;
 
-    /**
-     * Query the status of a car location.
-     *
-     * @return Number of available cars at this location
-     */
-    public int queryCars(String location) 
-	throws RemoteException; 
-
-    /**
-     * Query the status of a room location.
-     *
-     * @return Number of available rooms at this location
-     */
-    public int queryRooms(String location) 
-	throws RemoteException; 
-
-    /**
-     * Query the customer reservations.
-     *
-     * @return A formatted bill for the customer
-     */
-    public String queryCustomerInfo(int customerID) 
-	throws RemoteException; 
-    
     /**
      * Query the status of a flight.
      *
      * @return Price of a seat in this flight
      */
-    public int queryFlightPrice(int flightNumber) 
-	throws RemoteException; 
-
-    /**
-     * Query the status of a car location.
-     *
-     * @return Price of car
-     */
-    public int queryCarsPrice(String location) 
-	throws RemoteException; 
-
-    /**
-     * Query the status of a room location.
-     *
-     * @return Price of a room
-     */
-    public int queryRoomsPrice(String location) 
-	throws RemoteException; 
+    public int queryFlightPrice(int tid, int flightNumber)
+            throws RemoteException;
 
     /**
      * Reserve a seat on this flight.
      *
      * @return Success
      */
-    public boolean reserveFlight(int customerID, int flightNumber) 
-	throws RemoteException; 
-
-    /**
-     * Reserve a car at this location.
-     *
-     * @return Success
-     */
-    public boolean reserveCar(int customerID, String location) 
-	throws RemoteException; 
-
-    /**
-     * Reserve a room at this location.
-     *
-     * @return Success
-     */
-    public boolean reserveRoom(int customerID, String location) 
-	throws RemoteException; 
-
-    /**
-     * Reserve a bundle for the trip.
-     *
-     * @return Success
-     */
-    public boolean bundle(int customerID, Vector<String> flightNumbers, String location, boolean car, boolean room)
-	throws RemoteException; 
-
-    /**
-     * Convenience for probing the resource manager.
-     *
-     * @return Name
-     */
-    public String getName()
-        throws RemoteException;
-
-    /**
-     * Cancel a room reservation at this location
-     * @param customerID
-     * @param location
-     * @return
-     * @throws RemoteException
-     */
-    public boolean cancelRoomReservation(int customerID, String location)
-            throws RemoteException;
-
-    /**
-     * Cancel a car reservation at this location
-     * @param customerID
-     * @param location
-     * @return
-     * @throws RemoteException
-     */
-    boolean cancelCarReservation(int customerID, String location)
+    public boolean reserveFlight(int tid, int customerID, int flightNumber)
             throws RemoteException;
 
     /**
@@ -236,8 +88,157 @@ public interface IResourceManager extends Remote
      * @return
      * @throws RemoteException
      */
-    boolean cancelFlightReservation(int customerID, Integer f)
+    boolean cancelFlightReservation(int tid, int customerID, Integer f)
             throws RemoteException;
+
+    //----------------------------------------------------Car-------------------------------------------
+
+    /**
+     * Add car at a location.
+     *
+     * This should look a lot like addFlight, only keyed on a string location
+     * instead of a flight number.
+     *
+     * @return Success
+     */
+    public boolean addCars(int tid, String location, int numCars, int price)
+	throws RemoteException;
+
+    /**
+     * Delete all cars at a location.
+     *
+     * It may not succeed if there are reservations for this location
+     *
+     * @return Success
+     */
+    public boolean deleteCars(int tid, String location)
+            throws RemoteException;
+
+    /**
+     * Query the status of a car location.
+     *
+     * @return Number of available cars at this location
+     */
+    public int queryCars(int tid, String location)
+            throws RemoteException;
+
+    /**
+     * Query the status of a car location.
+     *
+     * @return Price of car
+     */
+    public int queryCarsPrice(int tid, String location)
+            throws RemoteException;
+
+    /**
+     * Reserve a car at this location.
+     *
+     * @return Success
+     */
+    public boolean reserveCar(int tid, int customerID, String location)
+            throws RemoteException;
+
+    /**
+     * Cancel a car reservation at this location
+     * @param customerID
+     * @param location
+     * @return
+     * @throws RemoteException
+     */
+    boolean cancelCarReservation(int tid, int customerID, String location)
+            throws RemoteException;
+
+    //--------------------------------------------------------Room--------------------------------------------------
+    /**
+     * Add room at a location.
+     *
+     * This should look a lot like addFlight, only keyed on a string location
+     * instead of a flight number.
+     *
+     * @return Success
+     */
+    public boolean addRooms(int tid, String location, int numRooms, int price)
+	throws RemoteException;
+
+    /**
+     * Delete all rooms at a location.
+     *
+     * It may not succeed if there are reservations for this location.
+     *
+     * @return Success
+     */
+    public boolean deleteRooms(int tid, String location)
+            throws RemoteException;
+
+    /**
+     * Query the status of a room location.
+     *
+     * @return Number of available rooms at this location
+     */
+    public int queryRooms(int tid, String location)
+            throws RemoteException;
+
+    /**
+     * Query the status of a room location.
+     *
+     * @return Price of a room
+     */
+    public int queryRoomsPrice(int tid, String location)
+            throws RemoteException;
+
+    /**
+     * Reserve a room at this location.
+     *
+     * @return Success
+     */
+    public boolean reserveRoom(int tid, int customerID, String location)
+            throws RemoteException;
+
+    /**
+     * Cancel a room reservation at this location
+     * @param customerID
+     * @param location
+     * @return
+     * @throws RemoteException
+     */
+    public boolean cancelRoomReservation(int tid, int customerID, String location)
+            throws RemoteException;
+
+    //-------------------------------------------------------------Customer------------------------------------------------
+    /**
+     * Add customer's id
+     *
+     * @return Unique customer identifier
+     */
+    public boolean newCustomer(int tid, int cid)
+	throws RemoteException; 
+
+    
+    /**
+     * Delete a customer and associated reservations.
+     *
+     * @return Success
+     */
+    public boolean deleteCustomer(int tid, int customerID)
+	throws RemoteException; 
+
+    /**
+     * Query the customer reservations.
+     *
+     * @return A formatted bill for the customer
+     */
+    public String queryCustomerInfo(int tid, int customerID)
+	throws RemoteException; 
+
+//    /**
+//     * Reserve a bundle for the trip.
+//     *
+//     * @return Success
+//     */
+//    public boolean bundle(int tid, int customerID, Vector<String> flightNumbers, String location, boolean car, boolean room)
+//	throws RemoteException;
+
+    //---------------------------------------------------------Transaction-----------------------------------------------
 
     /**
      * Check the resource locked status & availability.

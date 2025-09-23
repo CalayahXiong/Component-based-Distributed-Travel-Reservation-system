@@ -25,13 +25,13 @@ public class TransactionalManager {
         return transactions.getOrDefault(tid, TransactionStatus.UNKNOWN);
     }
 
-    public int startTransaction() {
+    public int start() {
         int tid = nextTid.getAndIncrement();
         transactions.put(tid, TransactionStatus.ACTIVE);
         return tid;
     }
 
-    public void commitTransaction(int tid, List<IResourceManager> rms) {
+    public boolean commit(int tid, List<IResourceManager> rms) {
         System.out.println("[TM] Commit request for T" + tid);
 
         boolean allPrepared = true;
@@ -74,19 +74,31 @@ public class TransactionalManager {
             transactions.put(tid, TransactionStatus.ABORTED);
             System.out.println("[TM] Transaction " + tid + " ABORTED");
         }
+        return allPrepared;
     }
 
-    public void abortTransaction(int tid, List<IResourceManager> rms) {
+    public boolean abort(int tid, List<IResourceManager> rms) {
         System.out.println("[TM] Abort request for T" + tid);
 
+        TransactionStatus status = transactions.get(tid);
+        if (status == TransactionStatus.ABORTED || status == TransactionStatus.COMMITTED) {
+            System.out.println("[TM] Transaction " + tid + " already finished with status " + status);
+            return true;
+        }
+
+        // notify all RM
         for (IResourceManager rm : rms) {
             try {
                 rm.abort(tid);
             } catch (RemoteException e) {
-                System.err.println("[TM] RemoteException in abort, T" + tid + ": " + e.getMessage());
+                System.err.println("[TM] RemoteException in abort, T" + tid + " at " + rm + ": " + e.getMessage());
             }
         }
+
         transactions.put(tid, TransactionStatus.ABORTED);
+        System.out.println("[TM] Transaction " + tid + " marked as ABORTED");
+        return true;
     }
+
 
 }
