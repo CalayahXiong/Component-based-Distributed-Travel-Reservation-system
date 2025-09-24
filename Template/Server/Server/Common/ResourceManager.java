@@ -784,12 +784,6 @@ public abstract class ResourceManager implements IResourceManager
 		}
 	}
 
-	// Reserve bundle
-	public boolean bundle(int tid, int customerId, Vector<String> flightNumbers, String location, boolean car, boolean room) throws RemoteException
-	{
-		return false;
-	}
-
 
 	//---------------------------------------------------Transaction----------------------------------------
 
@@ -806,18 +800,72 @@ public abstract class ResourceManager implements IResourceManager
 	}
 
 	@Override
-	public boolean prepare(int transactionalID) throws RemoteException {
-		return false;
+	public boolean prepare(int tid) throws RemoteException {
+		Trace.info("RM::prepare(" + tid + ") called");
+		// 一致性检查，比如检查是否有空值、不合法的删除等???
+		Map<String, RMItem> workspace = transactionData.get(tid);
+		if (workspace == null) {
+			Trace.info("RM::prepare(" + tid + ") no changes, auto-commit");
+			return true;
+		}
+
+		for (Map.Entry<String, RMItem> entry : workspace.entrySet()) {
+			RMItem item = entry.getValue();
+			if (item instanceof ReservableItem) {
+				ReservableItem reservable = (ReservableItem) item;
+				if (reservable.getCount() < 0) {
+					Trace.warn("RM::prepare(" + tid + ") failed, negative count for " + entry.getKey());
+					abort(tid);
+					return false;
+				}
+			}
+		}
+
+		Trace.info("RM::prepare(" + tid + ") OK");
+		return true;
+	}
+
+	/**
+	 * Write changes into m_data
+	 * @param tid
+	 * @return
+	 * @throws RemoteException
+	 */
+	@Override
+	public boolean commit(int tid) throws RemoteException {
+		Trace.info("RM::commit(" + tid + ") called");
+		Map<String, RMItem> workspace = transactionData.remove(tid);
+		if (workspace == null) {
+			Trace.info("RM::commit(" + tid + ") nothing to commit");
+			return true;
+		}
+
+		synchronized (m_data) {
+			for (Map.Entry<String, RMItem> entry : workspace.entrySet()) {
+				if (entry.getValue() == null) {
+					// staged delete
+					m_data.remove(entry.getKey());
+					Trace.info("RM::commit(" + tid + ") removed key " + entry.getKey());
+				} else {
+					m_data.put(entry.getKey(), (RMItem) entry.getValue().clone());
+					Trace.info("RM::commit(" + tid + ") updated key " + entry.getKey());
+				}
+			}
+		}
+
+		LM.releaseLocks(tid);
+		Trace.info("RM::commit(" + tid + ") done");
+		return true;
 	}
 
 	@Override
-	public boolean commit(int transactionalID) throws RemoteException {
-		return false;
+	public boolean abort(int tid) throws RemoteException {
+		Trace.info("RM::abort(" + tid + ") called");
+		transactionData.remove(tid);
+		LM.releaseLocks(tid); //
+		Trace.info("RM::abort(" + tid + ") rollback done");
+		return true;
 	}
 
-	@Override
-	public boolean abort(int transactionalID) throws RemoteException {
-		return false;
-	}
 }
  

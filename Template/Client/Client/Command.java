@@ -4,6 +4,7 @@ public enum Command {
 
 	// -------- Transaction management --------
 	Start("Start a new transaction", ""),
+	//After selecting all the resource want to reserve/inputting all the instructions, type this msg, the change will be grounded
 	Commit("Commit the current transaction", ""),
 	Abort("Abort the current transaction", ""),
 
