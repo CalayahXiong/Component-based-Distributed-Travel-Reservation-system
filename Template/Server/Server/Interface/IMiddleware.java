@@ -5,14 +5,11 @@ import java.rmi.RemoteException;
 import java.util.Vector;
 
 public interface IMiddleware extends Remote {
-    //transaction
 
-    // -------------------- Transaction Lifecycle --------------------
-    int startTransaction() throws RemoteException;
-
-    boolean commitTransaction(int tid) throws RemoteException;
-
-    boolean abortTransaction(int tid) throws RemoteException;
+    // Transaction Lifecycle
+    public int startTransaction() throws RemoteException;
+    public boolean commitTransaction(int tid) throws RemoteException;
+    public boolean abortTransaction(int tid) throws RemoteException;
 
     // Flight
     public boolean addFlight(int tid, int flightNum, int flightSeats, int flightPrice) throws RemoteException;
@@ -20,8 +17,7 @@ public interface IMiddleware extends Remote {
     public int queryFlight(int tid, int flightNumber) throws RemoteException;
     public int queryFlightPrice(int tid, int flightNumber) throws RemoteException;
     public boolean reserveFlight(int tid, int customerID, int flightNumber) throws RemoteException;
-
-    boolean cancelFlightReservation(int tid, int customerID, int flightNumber) throws RemoteException;
+    public boolean cancelFlightReservation(int tid, int customerID, int flightNumber) throws RemoteException;
 
     // Car
     public boolean addCars(int tid, String location, int count, int price) throws RemoteException;
@@ -29,7 +25,6 @@ public interface IMiddleware extends Remote {
     public int queryCars(int tid, String location) throws RemoteException;
     public int queryCarsPrice(int tid, String location) throws RemoteException;
     public boolean reserveCar(int tid, int customerID, String location) throws RemoteException;
-
     public boolean cancelCarReservation(int tid, int customerID, String location) throws RemoteException;
 
     // Room
@@ -38,11 +33,11 @@ public interface IMiddleware extends Remote {
     public int queryRooms(int tid, String location) throws RemoteException;
     public int queryRoomsPrice(int tid, String location) throws RemoteException;
     public boolean reserveRoom(int tid, int customerID, String location) throws RemoteException;
-
-    boolean cancelRoomReservation(int tid, int customerID, String location) throws RemoteException;
+    public boolean cancelRoomReservation(int tid, int customerID, String location) throws RemoteException;
 
     // Customer
-    public boolean newCustomer(int tid, int cid) throws RemoteException;
+    public int newCustomer(int tid) throws RemoteException;
+    public boolean newCustomerID(int tid, int cid) throws RemoteException;
     public boolean deleteCustomer(int tid, int customerID) throws RemoteException;
     public String queryCustomerInfo(int tid, int customerID) throws RemoteException;
 
@@ -51,6 +46,5 @@ public interface IMiddleware extends Remote {
                    String location, boolean car, boolean room) throws RemoteException;
 
     public String getName() throws RemoteException;
-
 
 }

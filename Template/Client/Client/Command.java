@@ -13,7 +13,9 @@ public enum Command {
 	AddFlight("Add a new flight number", "<FlightNumber>,<NumberOfSeats>,<PricePerSeat>"),
 	AddCars("Add a new car location", "<Location>,<NumberOfCar>,<Price>"),
 	AddRooms("Add a new room location", "<Location>,<NumberOfRoom>,<Price>"),
-	AddCustomer("Create a new customer with the id", "<CustomerID>"),
+
+	AddCustomer("Generate a new customer id", ""),
+	AddCustomerID("Create a new customer with the id", "<CustomerID>"),
 
 	DeleteFlight("Delete a flight number", "<FlightNumber>"),
 	DeleteCars("Delete all cars at a location", "<Location>"),

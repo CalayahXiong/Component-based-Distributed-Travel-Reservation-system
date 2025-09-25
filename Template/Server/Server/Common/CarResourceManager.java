@@ -2,136 +2,178 @@ package Server.Common;
 
 import java.rmi.RemoteException;
 
-public class CarResourceManager extends ResourceManager {
+public abstract class CarResourceManager extends ResourceManager {
 
     public CarResourceManager(String p_name) {
         super(p_name);
     }
 
-    // -------------------------
-    // Car-related methods
-    // -------------------------
-
+    //------------------------------------------------------Car---------------------------------------------
+    // Create a new car location or add cars to an existing location
+    // NOTE: if price <= 0 and the location already exists, it maintains its current price
     @Override
     public boolean addCars(int tid, String location, int count, int price) throws RemoteException {
-        return super.addCars(tid, location, count, price);
-    }
+        String key = Car.getKey(location);
+        try {
+            if (!LM.lock(tid, key, LockManager.LockType.WRITE)) {
+                abort(tid);
+                throw new RemoteException("Lock denied in addCars xid=" + tid);
+            }
 
+            Car curObj = (Car) readTransactionData(tid, key);
+            if (curObj == null) {
+                curObj = (Car) readData(key);
+            }
+
+            if (curObj == null) {
+                Car newObj = new Car(location, count, price);
+                writeTransactionData(tid, key, newObj);
+                Trace.info("RM::addCars(" + tid + ") created new location " + location);
+            } else {
+                curObj.setCount(curObj.getCount() + count);
+                if (price > 0) curObj.setPrice(price);
+                writeTransactionData(tid, key, curObj);
+                Trace.info("RM::addCars(" + tid + ") updated " + location);
+            }
+            return true;
+        } catch (DeadlockException e) {
+            abort(tid);
+            throw new RemoteException("Deadlock in addCars xid=" + tid, e);
+        }
+    }
     @Override
     public boolean deleteCars(int tid, String location) throws RemoteException {
-        return super.deleteCars(tid, location);
-    }
+        String key = Car.getKey(location);
+        try {
+            if (!LM.lock(tid, key, LockManager.LockType.WRITE)) {
+                abort(tid);
+                throw new RemoteException("Lock denied in deleteCars xid=" + tid);
+            }
 
+            Car curObj = (Car) readTransactionData(tid, key);
+            if (curObj == null) {
+                curObj = (Car) readData(key);
+            }
+
+            if (curObj == null) {
+                Trace.warn("RM::deleteCars(" + tid + ") failed -- location doesn't exist");
+                return false;
+            }
+            if (curObj.getReserved() > 0) {
+                Trace.warn("RM::deleteCars(" + tid + ") failed -- cars already reserved");
+                return false;
+            }
+
+            writeTransactionData(tid, key, null);
+            Trace.info("RM::deleteCars(" + tid + ") staged delete for " + location);
+            return true;
+        } catch (DeadlockException e) {
+            abort(tid);
+            throw new RemoteException("Deadlock in deleteCars xid=" + tid, e);
+        }
+    }
     @Override
     public int queryCars(int tid, String location) throws RemoteException {
-        return super.queryCars(tid, location);
-    }
+        String key = Car.getKey(location);
+        try {
+            if (!LM.lock(tid, key, LockManager.LockType.READ)) {
+                abort(tid);
+                throw new RemoteException("Lock denied in queryCars xid=" + tid);
+            }
 
+            Car curObj = (Car) readTransactionData(tid, key);
+            if (curObj == null) {
+                curObj = (Car) readData(key);
+            }
+
+            int value = (curObj == null) ? 0 : curObj.getCount();
+            Trace.info("RM::queryCars(" + tid + ", " + location + ") returns " + value);
+            return value;
+        } catch (DeadlockException e) {
+            abort(tid);
+            throw new RemoteException("Deadlock in queryCars xid=" + tid, e);
+        }
+    }
     @Override
     public int queryCarsPrice(int tid, String location) throws RemoteException {
-        return super.queryCarsPrice(tid, location);
-    }
+        String key = Car.getKey(location);
+        try {
+            if (!LM.lock(tid, key, LockManager.LockType.READ)) {
+                abort(tid);
+                throw new RemoteException("Lock denied in queryCarsPrice xid=" + tid);
+            }
 
+            Car curObj = (Car) readTransactionData(tid, key);
+            if (curObj == null) {
+                curObj = (Car) readData(key);
+            }
+
+            int value = (curObj == null) ? 0 : curObj.getPrice();
+            Trace.info("RM::queryCarsPrice(" + tid + ", " + location + ") returns $" + value);
+            return value;
+        } catch (DeadlockException e) {
+            abort(tid);
+            throw new RemoteException("Deadlock in queryCarsPrice xid=" + tid, e);
+        }
+    }
     @Override
     public boolean reserveCar(int tid, int customerID, String location) throws RemoteException {
-        return super.reserveCar(tid, customerID, location);
+        String key = Car.getKey(location);
+        try {
+            if (!LM.lock(tid, key, LockManager.LockType.WRITE)) {
+                abort(tid);
+                throw new RemoteException("Lock denied in reserveCar xid=" + tid);
+            }
+            return reserveItem(customerID, key, location);
+        } catch (DeadlockException e) {
+            abort(tid);
+            throw new RemoteException("Deadlock in reserveCar xid=" + tid, e);
+        }
     }
-
-    // -------------------------
-    // Unsupported flight methods
-    // -------------------------
-
     @Override
-    public boolean addFlight(int tid, int flightNum, int flightSeats, int flightPrice) throws RemoteException {
-        throw new UnsupportedOperationException("CarResourceManager cannot add flights.");
-    }
+    public boolean cancelCarReservation(int tid, int customerID, String location) throws RemoteException {
+        String key = Car.getKey(location);
+        try {
+            if (!LM.lock(tid, key, LockManager.LockType.WRITE)) {
+                abort(tid);
+                throw new RemoteException("Lock failed in cancelCarReservation tid=" + tid);
+            }
 
-    @Override
-    public boolean deleteFlight(int tid, int flightNum) throws RemoteException {
-        throw new UnsupportedOperationException("CarResourceManager cannot delete flights.");
-    }
+            Customer customer = (Customer) readTransactionData(tid, Customer.getKey(customerID));
+            if (customer == null) {
+                customer = (Customer) readData(Customer.getKey(customerID));
+                if (customer != null) {
+                    writeTransactionData(tid, customer.getKey(), (RMItem) customer.clone());
+                }
+            }
+            if (customer == null || !customer.hasReserved(key)) {
+                return false;
+            }
 
-    @Override
-    public int queryFlight(int tid, int flightNum) throws RemoteException {
-        throw new UnsupportedOperationException("CarResourceManager cannot query flights.");
-    }
+            Car car = (Car) readTransactionData(tid, key);
+            if (car == null) {
+                car = (Car) readData(key);
+                if (car != null) {
+                    writeTransactionData(tid, car.getKey(), (RMItem) car.clone());
+                }
+            }
+            if (car == null) {
+                return false;
+            }
 
-    @Override
-    public int queryFlightPrice(int tid, int flightNum) throws RemoteException {
-        throw new UnsupportedOperationException("CarResourceManager cannot query flight prices.");
-    }
+            customer.cancelReservation(key, String.valueOf(location), car.getPrice());
+            car.setCount(car.getCount() + 1);
+            car.setReserved(car.getReserved() - 1);
 
-    @Override
-    public boolean reserveFlight(int tid, int customerID, int flightNum) throws RemoteException {
-        throw new UnsupportedOperationException("CarResourceManager cannot reserve flights.");
-    }
+            writeTransactionData(tid, customer.getKey(), customer);
+            writeTransactionData(tid, car.getKey(), car);
 
-    @Override
-    public boolean cancelFlightReservation(int tid, int customerID, Integer f) throws RemoteException {
-        throw new UnsupportedOperationException("CarResourceManager cannot cancel flight reservation.");
-    }
-
-    // -------------------------
-    // Unsupported room methods
-    // -------------------------
-
-    @Override
-    public boolean addRooms(int tid, String location, int count, int price) throws RemoteException {
-        throw new UnsupportedOperationException("CarResourceManager cannot add rooms.");
-    }
-
-    @Override
-    public boolean deleteRooms(int tid, String location) throws RemoteException {
-        throw new UnsupportedOperationException("CarResourceManager cannot delete rooms.");
-    }
-
-    @Override
-    public int queryRooms(int tid, String location) throws RemoteException {
-        throw new UnsupportedOperationException("CarResourceManager cannot query rooms.");
-    }
-
-    @Override
-    public int queryRoomsPrice(int tid, String location) throws RemoteException {
-        throw new UnsupportedOperationException("CarResourceManager cannot query room prices.");
-    }
-
-    @Override
-    public boolean reserveRoom(int tid, int customerID, String location) throws RemoteException {
-        throw new UnsupportedOperationException("CarResourceManager cannot reserve rooms.");
-    }
-
-    @Override
-    public boolean cancelRoomReservation(int tid, int customerID, String location) throws RemoteException {
-        throw new UnsupportedOperationException("CarResourceManager cannot cancel room reservation.");
-    }
-
-    // -------------------------
-    // Customer methods (optional: keep or throw)
-    // -------------------------
-
-    @Override
-    public String queryCustomerInfo(int tid, int customerID) throws RemoteException {
-        throw new UnsupportedOperationException("CarResourceManager does not manage customers.");
-    }
-
-    @Override
-    public boolean newCustomer(int tid, int customerID) throws RemoteException {
-        throw new UnsupportedOperationException("CarResourceManager does not manage customers.");
-    }
-
-    @Override
-    public boolean deleteCustomer(int tid, int customerID) throws RemoteException {
-        throw new UnsupportedOperationException("CarResourceManager does not manage customers.");
-    }
-
-
-    // -------------------------
-    // Bundle method (MW handles this)
-    // -------------------------
-
-    @Override
-    public boolean bundle(int tid, int customerId, java.util.Vector<String> flightNumbers,
-                          String location, boolean car, boolean room) throws RemoteException {
-        throw new UnsupportedOperationException("CarResourceManager does not handle bundles. Middleware should coordinate bundles.");
+            Trace.info("RM::cancelCarReservation(" + tid + ", cust=" + customerID +
+                    ", car=" + location + ") succeeded");
+            return true;
+        } catch (DeadlockException e) {
+            abort(tid);
+            throw new RemoteException("Deadlock in cancelCarReservation xid=" + tid, e);
+        }
     }
 }

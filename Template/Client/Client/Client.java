@@ -222,9 +222,19 @@ public abstract class Client {
 
 			// ---------------- Customer ----------------
 			case AddCustomer: {
+				checkArgumentsCount(1, arguments.size());
+
+				System.out.println("Adding a new customer:=");
+
+				int customer = m_middleware.newCustomer(currentTid);
+
+				System.out.println("Add customer ID: " + customer);
+				break;
+			}
+			case AddCustomerID: {
 				checkArgumentsCount(2, arguments.size());
 				int customerID = toInt(arguments.elementAt(1));
-				if (m_middleware.newCustomer(currentTid, customerID)) {
+				if (m_middleware.newCustomerID(currentTid, customerID)) {
 					System.out.println("Customer " + customerID + " added");
 				} else {
 					System.out.println("Customer already exists");

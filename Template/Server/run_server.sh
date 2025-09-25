@@ -6,19 +6,19 @@
 
 case "$1" in
   flight)
-    java -Djava.rmi.server.codebase=file:$(pwd)/ Server.RMI.RMIMiddleware
-    ;;
-  car)
     java -Djava.rmi.server.codebase=file:$(pwd)/ Server.RMI.RMIFlightServer
     ;;
-  room)
+  car)
     java -Djava.rmi.server.codebase=file:$(pwd)/ Server.RMI.RMICarServer
     ;;
-  customer)
+  room)
     java -Djava.rmi.server.codebase=file:$(pwd)/ Server.RMI.RMIRoomServer
     ;;
-  middleware)
+  customer)
     java -Djava.rmi.server.codebase=file:$(pwd)/ Server.RMI.RMICustomerServer
+    ;;
+  middleware)
+    java -Djava.rmi.server.codebase=file:$(pwd)/ Server.RMI.RMIMiddleware
     ;;
   *)
     echo "Usage: $0 {flight|car|room|customer|middleware}"

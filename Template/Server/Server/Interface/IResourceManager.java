@@ -88,7 +88,7 @@ public interface IResourceManager extends Remote
      * @return
      * @throws RemoteException
      */
-    boolean cancelFlightReservation(int tid, int customerID, Integer f)
+    public boolean cancelFlightReservation(int tid, int customerID, Integer f)
             throws RemoteException;
 
     //----------------------------------------------------Car-------------------------------------------
@@ -145,7 +145,7 @@ public interface IResourceManager extends Remote
      * @return
      * @throws RemoteException
      */
-    boolean cancelCarReservation(int tid, int customerID, String location)
+    public boolean cancelCarReservation(int tid, int customerID, String location)
             throws RemoteException;
 
     //--------------------------------------------------------Room--------------------------------------------------
@@ -205,12 +205,21 @@ public interface IResourceManager extends Remote
             throws RemoteException;
 
     //-------------------------------------------------------------Customer------------------------------------------------
+
+    /**
+     * Sys will generate for customer
+     * @param tid
+     * @return
+     * @throws RemoteException
+     */
+    public int newCustomer(int tid)
+        throws RemoteException;
     /**
      * Add customer's id
      *
      * @return Unique customer identifier
      */
-    public boolean newCustomer(int tid, int cid)
+    public boolean newCustomerID(int tid, int cid)
 	throws RemoteException; 
 
     
@@ -228,15 +237,7 @@ public interface IResourceManager extends Remote
      * @return A formatted bill for the customer
      */
     public String queryCustomerInfo(int tid, int customerID)
-	throws RemoteException; 
-
-//    /**
-//     * Reserve a bundle for the trip.
-//     *
-//     * @return Success
-//     */
-//    public boolean bundle(int tid, int customerID, Vector<String> flightNumbers, String location, boolean car, boolean room)
-//	throws RemoteException;
+	throws RemoteException;
 
     //---------------------------------------------------------Transaction-----------------------------------------------
 
