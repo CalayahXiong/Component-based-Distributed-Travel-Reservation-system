@@ -23,7 +23,7 @@ public abstract class ResourceManager implements IResourceManager
         return m_name;
     }
 
-	//--------------------------------------------------------------Common Usages--------------------------------
+	//-------------------------------------------------Common Usages--------------------------------
 	protected RMItem readData(String key)
 	{
 		synchronized(m_data) {
@@ -105,7 +105,7 @@ public abstract class ResourceManager implements IResourceManager
 	{
 		Trace.info("RM::reserveItem(customer=" + customerID + ", " + key + ", " + location + ") called" );
 		// Read customer object if it exists (and read lock it)
-		Customer customer = (Customer)readData(Customer.getKey(customerID));
+		Customer customer = (Customer)readData(Customer.getKey(customerID)); //这里读的是FRM的m_data,故 customer doesn't exist
 		if (customer == null)
 		{
 			Trace.warn("RM::reserveItem(" + customerID + ", " + key + ", " + location + ")  failed--customer doesn't exist");

@@ -79,6 +79,8 @@ public class LockManager {
                 }
             }
         }
+        //Trace.info("RM::release(" + tid + ") locks");
+        System.out.println("Release occurred, locks for: " + tid);
     }
 
 }

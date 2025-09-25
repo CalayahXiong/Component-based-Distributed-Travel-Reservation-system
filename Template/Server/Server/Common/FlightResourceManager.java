@@ -126,6 +126,7 @@ public abstract class FlightResourceManager extends ResourceManager {
                 abort(tid);
                 throw new RemoteException("Lock failed in reserveFlight tid=" + tid);
             }
+            //lock is true
             return reserveItem(customerID, key, String.valueOf(flightNum));
         } catch (DeadlockException e) {
             abort(tid);

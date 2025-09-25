@@ -28,6 +28,7 @@ public abstract class CustomerManager extends ResourceManager {
             Customer customer = (Customer) readTransactionData(tid, key);
             if (customer == null) {
                 customer = (Customer) readData(key);
+                System.out.println("Customer" + customerID + " from m_data");
             }
 
             if (customer == null) {
