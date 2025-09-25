@@ -124,9 +124,9 @@ public class RMICustomerServer extends CustomerManager  {
 
             Registry registry;
             try{
-                registry = LocateRegistry.createRegistry(3020); //register port
+                registry = LocateRegistry.createRegistry(3035); //register port
             } catch (RemoteException e) {
-                registry = LocateRegistry.getRegistry(3020);
+                registry = LocateRegistry.getRegistry(3035);
             }
 
             registry.rebind(s_rmiPrefix + s_serverName, customerRM);

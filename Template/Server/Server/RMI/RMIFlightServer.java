@@ -121,9 +121,9 @@ public class RMIFlightServer extends FlightResourceManager {
             // Setup registry
             Registry registry;
             try {
-                registry = LocateRegistry.createRegistry(3020);
+                registry = LocateRegistry.createRegistry(3035);
             } catch (RemoteException e) {
-                registry = LocateRegistry.getRegistry(3020);
+                registry = LocateRegistry.getRegistry(3035);
             }
 
             registry.rebind(s_rmiPrefix + s_serverName, flightRM);

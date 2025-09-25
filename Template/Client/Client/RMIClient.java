@@ -14,7 +14,7 @@ public class RMIClient extends Client
 {
 	private static String s_serverHost = "localhost";
         // recommended to change port last digits to your group number
-	private static int s_serverPort = 3020;
+	private static int s_serverPort = 3035;
 	private static String s_serverName = "Middleware";
 
 	//TODO: ADD YOUR GROUP NUMBER TO COMPILE

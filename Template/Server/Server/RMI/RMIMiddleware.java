@@ -24,9 +24,9 @@ public class RMIMiddleware extends Middleware {
             // Setup registry
             Registry registry;
             try {
-                registry = LocateRegistry.createRegistry(3020);
+                registry = LocateRegistry.createRegistry(3035);
             } catch (RemoteException e) {
-                registry = LocateRegistry.getRegistry(3020);
+                registry = LocateRegistry.getRegistry(3035);
             }
 
             IResourceManager flightRM = (IResourceManager) registry.lookup(s_rmiPrefix + "Flight_Server");
