@@ -20,7 +20,27 @@ public class RMIRoomServer extends RoomResourceManager {
     // ------------------------ Stub methods for unsupported operations ------------------------
     // Flights
     @Override
-    public boolean addFlight(int tid, int flightNum, int flightSeats, int flightPrice) throws RemoteException {
+    public boolean addFlight(int tid, String flightNum, int flightSeats, int flightPrice) throws RemoteException {
+        throw new UnsupportedOperationException("Room RM does not handle flights");
+    }
+
+    @Override
+    public boolean deleteFlight(int tid, String flightNum) throws RemoteException {
+        throw new UnsupportedOperationException("Room RM does not handle flights");
+    }
+
+    @Override
+    public int queryFlight(int tid, String flightNumber) throws RemoteException {
+        throw new UnsupportedOperationException("Room RM does not handle flights");
+    }
+
+    @Override
+    public int queryFlightPrice(int tid, String flightNumber) throws RemoteException {
+        throw new UnsupportedOperationException("Room RM does not handle flights");
+    }
+
+    @Override
+    public boolean reserveFlight(int tid, int customerID, String flightNumber) throws RemoteException {
         throw new UnsupportedOperationException("Room RM does not handle flights");
     }
 
@@ -75,10 +95,10 @@ public class RMIRoomServer extends RoomResourceManager {
         throw new UnsupportedOperationException("Room RM does not handle cars");
     }
 
-    @Override
-    public boolean cancelCarReservation(int tid, int customerID, String location) throws RemoteException {
-        throw new UnsupportedOperationException("Room RM does not handle cars");
-    }
+//    @Override
+//    public boolean cancelCarReservation(int tid, int customerID, String location) throws RemoteException {
+//        throw new UnsupportedOperationException("Room RM does not handle cars");
+//    }
 
     // Customer operations (except reservation)
     @Override
@@ -98,6 +118,16 @@ public class RMIRoomServer extends RoomResourceManager {
 
     @Override
     public String queryCustomerInfo(int tid, int customerID) throws RemoteException {
+        throw new UnsupportedOperationException("Room RM does not handle customer info");
+    }
+
+    @Override
+    public boolean customerExists(int tid, int customerID) throws RemoteException {
+        throw new UnsupportedOperationException("Room RM does not handle customer info");
+    }
+
+    @Override
+    public boolean customerReserve(int tid, int cid, String key, int count, int price) throws RemoteException {
         throw new UnsupportedOperationException("Room RM does not handle customer info");
     }
 

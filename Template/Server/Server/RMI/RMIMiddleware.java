@@ -29,10 +29,26 @@ public class RMIMiddleware extends Middleware {
                 registry = LocateRegistry.getRegistry(3035);
             }
 
-            IResourceManager flightRM = (IResourceManager) registry.lookup(s_rmiPrefix + "Flight_Server");
-            IResourceManager carRM = (IResourceManager) registry.lookup(s_rmiPrefix + "Car_Server");
-            IResourceManager roomRM = (IResourceManager) registry.lookup(s_rmiPrefix + "Room_Server");
-            IResourceManager customerRM = (IResourceManager) registry.lookup(s_rmiPrefix + "Customer_Server");
+//            IResourceManager flightRM = (IResourceManager) registry.lookup(s_rmiPrefix + "Flight_Server");
+//            IResourceManager carRM = (IResourceManager) registry.lookup(s_rmiPrefix + "Car_Server");
+//            IResourceManager roomRM = (IResourceManager) registry.lookup(s_rmiPrefix + "Room_Server");
+//            IResourceManager customerRM = (IResourceManager) registry.lookup(s_rmiPrefix + "Customer_Server");
+            String flightHost = "tr-open-01.cs.mcgill.ca";
+            String carHost    = "tr-open-02.cs.mcgill.ca";
+            String roomHost   = "tr-open-03.cs.mcgill.ca";
+            String custHost   = "tr-open-04.cs.mcgill.ca";
+            String Host = "localhost";
+
+            Registry flightRegistry   = LocateRegistry.getRegistry(Host, 3035);
+            Registry carRegistry      = LocateRegistry.getRegistry(Host, 3035);
+            Registry roomRegistry     = LocateRegistry.getRegistry(Host, 3035);
+            Registry customerRegistry = LocateRegistry.getRegistry(Host, 3035);
+
+            IResourceManager flightRM   = (IResourceManager) flightRegistry.lookup(s_rmiPrefix + "Flight_Server");
+            IResourceManager carRM      = (IResourceManager) carRegistry.lookup(s_rmiPrefix + "Car_Server");
+            IResourceManager roomRM     = (IResourceManager) roomRegistry.lookup(s_rmiPrefix + "Room_Server");
+            IResourceManager customerRM = (IResourceManager) customerRegistry.lookup(s_rmiPrefix + "Customer_Server");
+
 
             RMIMiddleware mw = new RMIMiddleware(flightRM, carRM, roomRM, customerRM);
 

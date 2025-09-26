@@ -12,7 +12,7 @@ import java.io.*;
 
 public class RMIClient extends Client
 {
-	private static String s_serverHost = "localhost";
+	private static String s_serverHost = "localhost"; //"tr-open-05.cs.mcgill.ca";
         // recommended to change port last digits to your group number
 	private static int s_serverPort = 3035;
 	private static String s_serverName = "Middleware";

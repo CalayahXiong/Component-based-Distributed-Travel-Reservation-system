@@ -16,7 +16,7 @@ public abstract class CarResourceManager extends ResourceManager {
         String key = Car.getKey(location);
         try {
             if (!LM.lock(tid, key, LockManager.LockType.WRITE)) {
-                abort(tid);
+                //abort(tid);
                 throw new RemoteException("Lock denied in addCars xid=" + tid);
             }
 
@@ -37,7 +37,7 @@ public abstract class CarResourceManager extends ResourceManager {
             }
             return true;
         } catch (DeadlockException e) {
-            abort(tid);
+            //abort(tid);
             throw new RemoteException("Deadlock in addCars xid=" + tid, e);
         }
     }
@@ -46,7 +46,7 @@ public abstract class CarResourceManager extends ResourceManager {
         String key = Car.getKey(location);
         try {
             if (!LM.lock(tid, key, LockManager.LockType.WRITE)) {
-                abort(tid);
+                //abort(tid);
                 throw new RemoteException("Lock denied in deleteCars xid=" + tid);
             }
 
@@ -68,7 +68,7 @@ public abstract class CarResourceManager extends ResourceManager {
             Trace.info("RM::deleteCars(" + tid + ") staged delete for " + location);
             return true;
         } catch (DeadlockException e) {
-            abort(tid);
+            //abort(tid);
             throw new RemoteException("Deadlock in deleteCars xid=" + tid, e);
         }
     }
@@ -77,7 +77,7 @@ public abstract class CarResourceManager extends ResourceManager {
         String key = Car.getKey(location);
         try {
             if (!LM.lock(tid, key, LockManager.LockType.READ)) {
-                abort(tid);
+                //abort(tid);
                 throw new RemoteException("Lock denied in queryCars xid=" + tid);
             }
 
@@ -90,7 +90,7 @@ public abstract class CarResourceManager extends ResourceManager {
             Trace.info("RM::queryCars(" + tid + ", " + location + ") returns " + value);
             return value;
         } catch (DeadlockException e) {
-            abort(tid);
+            //abort(tid);
             throw new RemoteException("Deadlock in queryCars xid=" + tid, e);
         }
     }
@@ -99,7 +99,7 @@ public abstract class CarResourceManager extends ResourceManager {
         String key = Car.getKey(location);
         try {
             if (!LM.lock(tid, key, LockManager.LockType.READ)) {
-                abort(tid);
+                //abort(tid);
                 throw new RemoteException("Lock denied in queryCarsPrice xid=" + tid);
             }
 
@@ -112,7 +112,7 @@ public abstract class CarResourceManager extends ResourceManager {
             Trace.info("RM::queryCarsPrice(" + tid + ", " + location + ") returns $" + value);
             return value;
         } catch (DeadlockException e) {
-            abort(tid);
+            //abort(tid);
             throw new RemoteException("Deadlock in queryCarsPrice xid=" + tid, e);
         }
     }
@@ -121,59 +121,59 @@ public abstract class CarResourceManager extends ResourceManager {
         String key = Car.getKey(location);
         try {
             if (!LM.lock(tid, key, LockManager.LockType.WRITE)) {
-                abort(tid);
+                //abort(tid);
                 throw new RemoteException("Lock denied in reserveCar xid=" + tid);
             }
             return reserveItem(customerID, key, location);
         } catch (DeadlockException e) {
-            abort(tid);
+            //abort(tid);
             throw new RemoteException("Deadlock in reserveCar xid=" + tid, e);
         }
     }
-    @Override
-    public boolean cancelCarReservation(int tid, int customerID, String location) throws RemoteException {
-        String key = Car.getKey(location);
-        try {
-            if (!LM.lock(tid, key, LockManager.LockType.WRITE)) {
-                abort(tid);
-                throw new RemoteException("Lock failed in cancelCarReservation tid=" + tid);
-            }
-
-            Customer customer = (Customer) readTransactionData(tid, Customer.getKey(customerID));
-            if (customer == null) {
-                customer = (Customer) readData(Customer.getKey(customerID));
-                if (customer != null) {
-                    writeTransactionData(tid, customer.getKey(), (RMItem) customer.clone());
-                }
-            }
-            if (customer == null || !customer.hasReserved(key)) {
-                return false;
-            }
-
-            Car car = (Car) readTransactionData(tid, key);
-            if (car == null) {
-                car = (Car) readData(key);
-                if (car != null) {
-                    writeTransactionData(tid, car.getKey(), (RMItem) car.clone());
-                }
-            }
-            if (car == null) {
-                return false;
-            }
-
-            customer.cancelReservation(key, String.valueOf(location), car.getPrice());
-            car.setCount(car.getCount() + 1);
-            car.setReserved(car.getReserved() - 1);
-
-            writeTransactionData(tid, customer.getKey(), customer);
-            writeTransactionData(tid, car.getKey(), car);
-
-            Trace.info("RM::cancelCarReservation(" + tid + ", cust=" + customerID +
-                    ", car=" + location + ") succeeded");
-            return true;
-        } catch (DeadlockException e) {
-            abort(tid);
-            throw new RemoteException("Deadlock in cancelCarReservation xid=" + tid, e);
-        }
-    }
+//    @Override
+//    public boolean cancelCarReservation(int tid, int customerID, String location) throws RemoteException {
+//        String key = Car.getKey(location);
+//        try {
+//            if (!LM.lock(tid, key, LockManager.LockType.WRITE)) {
+//                abort(tid);
+//                throw new RemoteException("Lock failed in cancelCarReservation tid=" + tid);
+//            }
+//
+//            Customer customer = (Customer) readTransactionData(tid, Customer.getKey(customerID));
+//            if (customer == null) {
+//                customer = (Customer) readData(Customer.getKey(customerID));
+//                if (customer != null) {
+//                    writeTransactionData(tid, customer.getKey(), (RMItem) customer.clone());
+//                }
+//            }
+//            if (customer == null || !customer.hasReserved(key)) {
+//                return false;
+//            }
+//
+//            Car car = (Car) readTransactionData(tid, key);
+//            if (car == null) {
+//                car = (Car) readData(key);
+//                if (car != null) {
+//                    writeTransactionData(tid, car.getKey(), (RMItem) car.clone());
+//                }
+//            }
+//            if (car == null) {
+//                return false;
+//            }
+//
+//            customer.cancelReservation(key, String.valueOf(location), car.getPrice());
+//            car.setCount(car.getCount() + 1);
+//            car.setReserved(car.getReserved() - 1);
+//
+//            writeTransactionData(tid, customer.getKey(), customer);
+//            writeTransactionData(tid, car.getKey(), car);
+//
+//            Trace.info("RM::cancelCarReservation(" + tid + ", cust=" + customerID +
+//                    ", car=" + location + ") succeeded");
+//            return true;
+//        } catch (DeadlockException e) {
+//            abort(tid);
+//            throw new RemoteException("Deadlock in cancelCarReservation xid=" + tid, e);
+//        }
+//    }
 }

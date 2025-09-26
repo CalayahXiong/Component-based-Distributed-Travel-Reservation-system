@@ -13,13 +13,13 @@ public class ReservedItem extends RMItem
 	private int m_nCount;
 	private int m_nPrice;
 	private String m_strReservableItemKey;
-	private String m_strLocation;
+	//private String m_strLocation;
 
-	ReservedItem(String key, String location, int count, int price)
+	ReservedItem(String key, int count, int price)
 	{
 		super();
 		m_strReservableItemKey = key;
-		m_strLocation = location;
+		//m_strLocation = location;
 		m_nCount = count;
 		m_nPrice = price;
 	}
@@ -29,10 +29,10 @@ public class ReservedItem extends RMItem
 		return m_strReservableItemKey;
 	}
 
-	public String getLocation()
-	{
-		return m_strLocation;
-	}
+//	public String getLocation()
+//	{
+//		return m_strLocation;
+//	}
 
 	public void setCount(int count)
 	{

@@ -16,7 +16,7 @@ public abstract class RoomResourceManager extends ResourceManager {
         String key = Room.getKey(location);
         try {
             if (!LM.lock(tid, key, LockManager.LockType.WRITE)) {
-                abort(tid);
+                //abort(tid);
                 throw new RemoteException("Lock denied in addRooms xid=" + tid);
             }
 
@@ -37,7 +37,7 @@ public abstract class RoomResourceManager extends ResourceManager {
             }
             return true;
         } catch (DeadlockException e) {
-            abort(tid);
+            //abort(tid);
             throw new RemoteException("Deadlock in addRooms xid=" + tid, e);
         }
     }
@@ -46,7 +46,7 @@ public abstract class RoomResourceManager extends ResourceManager {
         String key = Room.getKey(location);
         try {
             if (!LM.lock(tid, key, LockManager.LockType.WRITE)) {
-                abort(tid);
+                //abort(tid);
                 throw new RemoteException("Lock denied in deleteRooms xid=" + tid);
             }
 
@@ -68,7 +68,7 @@ public abstract class RoomResourceManager extends ResourceManager {
             Trace.info("RM::deleteRooms(" + tid + ", " + location + ") staged delete");
             return true;
         } catch (DeadlockException e) {
-            abort(tid);
+            //abort(tid);
             throw new RemoteException("Deadlock in deleteRooms xid=" + tid, e);
         }
     }
@@ -77,7 +77,7 @@ public abstract class RoomResourceManager extends ResourceManager {
         String key = Room.getKey(location);
         try {
             if (!LM.lock(tid, key, LockManager.LockType.READ)) {
-                abort(tid);
+                //abort(tid);
                 throw new RemoteException("Lock denied in queryRooms xid=" + tid);
             }
 
@@ -90,7 +90,7 @@ public abstract class RoomResourceManager extends ResourceManager {
             Trace.info("RM::queryRooms(" + tid + ", " + location + ") returns " + value);
             return value;
         } catch (DeadlockException e) {
-            abort(tid);
+            //abort(tid);
             throw new RemoteException("Deadlock in queryRooms xid=" + tid, e);
         }
     }
@@ -99,7 +99,7 @@ public abstract class RoomResourceManager extends ResourceManager {
         String key = Room.getKey(location);
         try {
             if (!LM.lock(tid, key, LockManager.LockType.READ)) {
-                abort(tid);
+                //abort(tid);
                 throw new RemoteException("Lock denied in queryRoomsPrice xid=" + tid);
             }
 
@@ -112,7 +112,7 @@ public abstract class RoomResourceManager extends ResourceManager {
             Trace.info("RM::queryRoomsPrice(" + tid + ", " + location + ") returns $" + value);
             return value;
         } catch (DeadlockException e) {
-            abort(tid);
+            //abort(tid);
             throw new RemoteException("Deadlock in queryRoomsPrice xid=" + tid, e);
         }
     }
@@ -121,59 +121,59 @@ public abstract class RoomResourceManager extends ResourceManager {
         String key = Room.getKey(location);
         try {
             if (!LM.lock(tid, key, LockManager.LockType.WRITE)) {
-                abort(tid);
+                //abort(tid);
                 throw new RemoteException("Lock denied in reserveRoom xid=" + tid);
             }
             return reserveItem(customerID, key, location);
         } catch (DeadlockException e) {
-            abort(tid);
+            //abort(tid);
             throw new RemoteException("Deadlock in reserveRoom xid=" + tid, e);
         }
     }
-    @Override
-    public boolean cancelRoomReservation(int tid, int customerID, String location) throws RemoteException {
-        String key = Room.getKey(location);
-        try {
-            if (!LM.lock(tid, key, LockManager.LockType.WRITE)) {
-                abort(tid);
-                throw new RemoteException("Lock failed in cancelRoomReservation tid=" + tid);
-            }
-
-            Customer customer = (Customer) readTransactionData(tid, Customer.getKey(customerID));
-            if (customer == null) {
-                customer = (Customer) readData(Customer.getKey(customerID));
-                if (customer != null) {
-                    writeTransactionData(tid, customer.getKey(), (RMItem) customer.clone());
-                }
-            }
-            if (customer == null || !customer.hasReserved(key)) {
-                return false;
-            }
-
-            Room room = (Room) readTransactionData(tid, key);
-            if (room == null) {
-                room = (Room) readData(key);
-                if (room != null) {
-                    writeTransactionData(tid, room.getKey(), (RMItem) room.clone());
-                }
-            }
-            if (room == null) {
-                return false;
-            }
-
-            customer.cancelReservation(key, String.valueOf(location), room.getPrice());
-            room.setCount(room.getCount() + 1);
-            room.setReserved(room.getReserved() - 1);
-
-            writeTransactionData(tid, customer.getKey(), customer);
-            writeTransactionData(tid, room.getKey(), room);
-
-            Trace.info("RM::cancelFlightReservation(" + tid + ", cust=" + customerID +
-                    ", room=" + location + ") succeeded");
-            return true;
-        } catch (DeadlockException e) {
-            abort(tid);
-            throw new RemoteException("Deadlock in cancelRoomReservation xid=" + tid, e);
-        }
-    }
+//    @Override
+//    public boolean cancelRoomReservation(int tid, int customerID, String location) throws RemoteException {
+//        String key = Room.getKey(location);
+//        try {
+//            if (!LM.lock(tid, key, LockManager.LockType.WRITE)) {
+//                abort(tid);
+//                throw new RemoteException("Lock failed in cancelRoomReservation tid=" + tid);
+//            }
+//
+//            Customer customer = (Customer) readTransactionData(tid, Customer.getKey(customerID));
+//            if (customer == null) {
+//                customer = (Customer) readData(Customer.getKey(customerID));
+//                if (customer != null) {
+//                    writeTransactionData(tid, customer.getKey(), (RMItem) customer.clone());
+//                }
+//            }
+//            if (customer == null || !customer.hasReserved(key)) {
+//                return false;
+//            }
+//
+//            Room room = (Room) readTransactionData(tid, key);
+//            if (room == null) {
+//                room = (Room) readData(key);
+//                if (room != null) {
+//                    writeTransactionData(tid, room.getKey(), (RMItem) room.clone());
+//                }
+//            }
+//            if (room == null) {
+//                return false;
+//            }
+//
+//            customer.cancelReservation(key, String.valueOf(location), room.getPrice());
+//            room.setCount(room.getCount() + 1);
+//            room.setReserved(room.getReserved() - 1);
+//
+//            writeTransactionData(tid, customer.getKey(), customer);
+//            writeTransactionData(tid, room.getKey(), room);
+//
+//            Trace.info("RM::cancelFlightReservation(" + tid + ", cust=" + customerID +
+//                    ", room=" + location + ") succeeded");
+//            return true;
+//        } catch (DeadlockException e) {
+//            abort(tid);
+//            throw new RemoteException("Deadlock in cancelRoomReservation xid=" + tid, e);
+//        }
+//    }
 }

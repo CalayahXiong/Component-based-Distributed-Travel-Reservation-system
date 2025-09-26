@@ -12,8 +12,7 @@ public class Customer extends RMItem
 	private int m_ID;
 	private RMHashMap m_reservations;
 
-	public Customer(int id)
-	{
+	public Customer(int id) {
 		super();
 		m_reservations = new RMHashMap();
 		m_ID = id;
@@ -29,13 +28,12 @@ public class Customer extends RMItem
 		return m_ID;
 	}
 
-	public void reserve(String key, String location, int price)
-	{
+	public void reserve(String key, int price) {
 		ReservedItem reservedItem = getReservedItem(key);
 		if (reservedItem == null)
 		{
 			// Customer doesn't already have a reservation for this resource, so create a new one now
-			reservedItem = new ReservedItem(key, location, 1, price);
+			reservedItem = new ReservedItem(key, 1, price);
 		}
 		else
 		{
@@ -99,24 +97,24 @@ public class Customer extends RMItem
 		return reservedItem != null && reservedItem.getCount() > 0;
 	}
 
-	public void cancelReservation(String key, String location, int price) {
-		ReservedItem reservedItem = getReservedItem(key);
-		if (reservedItem == null) {
-			return; // nothing to cancel
-		}
-
-		int count = reservedItem.getCount();
-		if (count <= 1) {
-			// remove reservation entirely
-			m_reservations.remove(key);
-		} else {
-			// decrease count
-			reservedItem.setCount(count - 1);
-			// keep last known price (optional: could update here)
-			reservedItem.setPrice(price);
-			m_reservations.put(reservedItem.getKey(), reservedItem);
-		}
-	}
+//	public void cancelReservation(String key, String location, int price) {
+//		ReservedItem reservedItem = getReservedItem(key);
+//		if (reservedItem == null) {
+//			return; // nothing to cancel
+//		}
+//
+//		int count = reservedItem.getCount();
+//		if (count <= 1) {
+//			// remove reservation entirely
+//			m_reservations.remove(key);
+//		} else {
+//			// decrease count
+//			reservedItem.setCount(count - 1);
+//			// keep last known price (optional: could update here)
+//			reservedItem.setPrice(price);
+//			m_reservations.put(reservedItem.getKey(), reservedItem);
+//		}
+//	}
 
 }
 

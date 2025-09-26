@@ -1,5 +1,7 @@
 package Server.Interface;
 
+import Server.Common.LockManager;
+
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
@@ -32,6 +34,18 @@ public interface IResourceManager extends Remote
     public String getName()
             throws RemoteException;
 
+
+    /**
+     * Write request into m_data
+     * @param customerID
+     * @param flightKey
+     * @param valueOf
+     * @return
+     * @throws RemoteException
+     */
+    public boolean reserveItem(int customerID, String flightKey, String valueOf)
+        throws RemoteException;
+
     //-----------------------------------------Flight------------------------------------
     /**
      * Add seats to a flight.
@@ -43,7 +57,7 @@ public interface IResourceManager extends Remote
      *
      * @return Success
      */
-    public boolean addFlight(int tid, int flightNum, int flightSeats, int flightPrice)
+    public boolean addFlight(int tid, String flightNum, int flightSeats, int flightPrice)
 	throws RemoteException;
 
     /**
@@ -54,7 +68,7 @@ public interface IResourceManager extends Remote
      *
      * @return Success
      */
-    public boolean deleteFlight(int tid, int flightNum)
+    public boolean deleteFlight(int tid, String flightNum)
             throws RemoteException;
 
     /**
@@ -62,7 +76,7 @@ public interface IResourceManager extends Remote
      *
      * @return Number of empty seats
      */
-    public int queryFlight(int tid, int flightNumber)
+    public int queryFlight(int tid, String flightNumber)
             throws RemoteException;
 
     /**
@@ -70,7 +84,7 @@ public interface IResourceManager extends Remote
      *
      * @return Price of a seat in this flight
      */
-    public int queryFlightPrice(int tid, int flightNumber)
+    public int queryFlightPrice(int tid, String flightNumber)
             throws RemoteException;
 
     /**
@@ -78,21 +92,22 @@ public interface IResourceManager extends Remote
      *
      * @return Success
      */
-    public boolean reserveFlight(int tid, int customerID, int flightNumber)
+    public boolean reserveFlight(int tid, int customerID, String flightNumber)
             throws RemoteException;
 
-    /**
-     * Cancel a flight reservation
-     * @param customerID
-     * @param f
-     * @return
-     * @throws RemoteException
-     */
-    public boolean cancelFlightReservation(int tid, int customerID, Integer f)
-            throws RemoteException;
+//    /**
+//     * Cancel a flight reservation
+//     * @param customerID
+//     * @param flightNum
+//     * @return
+//     * @throws RemoteException
+//     */
+//    public boolean cancelFlightReservation(int tid, int customerID, Integer flightNum)
+//            throws RemoteException;
 
-    //----------------------------------------------------Car-------------------------------------------
+    //----------------------------------Car-------------------------------------------
 
+    //-----------------------------------------------Car-----------------------------------------
     /**
      * Add car at a location.
      *
@@ -139,16 +154,17 @@ public interface IResourceManager extends Remote
             throws RemoteException;
 
     /**
-     * Cancel a car reservation at this location
+     * Cancel car reservation
+     * @param tid
      * @param customerID
      * @param location
      * @return
      * @throws RemoteException
      */
-    public boolean cancelCarReservation(int tid, int customerID, String location)
-            throws RemoteException;
+    //boolean cancelCarReservation(int tid, int customerID, String location)
+        //throws RemoteException;
 
-    //--------------------------------------------------------Room--------------------------------------------------
+    //-----------------------------------------------------------Room----------------------------
     /**
      * Add room at a location.
      *
@@ -194,18 +210,21 @@ public interface IResourceManager extends Remote
     public boolean reserveRoom(int tid, int customerID, String location)
             throws RemoteException;
 
-    /**
-     * Cancel a room reservation at this location
-     * @param customerID
-     * @param location
-     * @return
-     * @throws RemoteException
-     */
-    public boolean cancelRoomReservation(int tid, int customerID, String location)
-            throws RemoteException;
 
-    //-------------------------------------------------------------Customer------------------------------------------------
+//    /**
+//     * cancel room reservation
+//     * @param tid
+//     * @param customerID
+//     * @param location
+//     * @return
+//     * @throws RemoteException
+//     */
+//    boolean cancelRoomReservation(int tid, int customerID, String location)
+//        throws RemoteException;
 
+
+    //----------------------------------------------------Customer-----------------------------
+    //----------------------------------------------Customer-------------------------------
     /**
      * Sys will generate for customer
      * @param tid
@@ -222,7 +241,6 @@ public interface IResourceManager extends Remote
     public boolean newCustomerID(int tid, int cid)
 	throws RemoteException; 
 
-    
     /**
      * Delete a customer and associated reservations.
      *
@@ -238,6 +256,28 @@ public interface IResourceManager extends Remote
      */
     public String queryCustomerInfo(int tid, int customerID)
 	throws RemoteException;
+
+    /**
+     * Check a customer existence
+     * @param tid
+     * @param customerID
+     * @return
+     * @throws RemoteException
+     */
+    public boolean customerExists(int tid, int customerID)
+            throws RemoteException;
+
+    /**
+     * CustomerRM reserve item into transaction data
+     * @param tid
+     * @param cid
+     * @param key
+     * @param count
+     * @return
+     * @throws RemoteException
+     */
+    public boolean customerReserve(int tid, int cid, String key, int count, int price)
+        throws RemoteException;
 
     //---------------------------------------------------------Transaction-----------------------------------------------
 
@@ -269,4 +309,16 @@ public interface IResourceManager extends Remote
      */
     public boolean abort(int transactionalID)
         throws RemoteException;
+
+    /**
+     * Cancel one reservation instead the whole transaction like abort()
+     * @param tid
+     * @param cid
+     * @param key
+     * @return
+     * @throws RemoteException
+     */
+    public boolean rollbackReserve(int tid, int cid, String key)
+        throws RemoteException;
+
 }

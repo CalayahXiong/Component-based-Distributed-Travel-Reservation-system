@@ -31,7 +31,11 @@ public abstract class Client {
 
 			try {
 				System.out.print((char)27 + "[32;1m\n>] " + (char)27 + "[0m");
-				command = stdin.readLine().trim();
+				command = stdin.readLine();
+				if (command == null) {
+					break;
+				}
+				command = command.trim();
 			} catch (IOException io) {
 				System.err.println((char)27 + "[31;1mClient exception: " + (char)27 + "[0m" + io.getLocalizedMessage());
 				io.printStackTrace();
@@ -40,16 +44,24 @@ public abstract class Client {
 
 			try {
 				arguments = parse(command);
-				Command cmd = Command.fromString((String)arguments.elementAt(0));
+
+				// avoid null input
+				if (arguments.size() == 0) {
+					System.out.println("Invalid or empty command. Type \"help\" for usage.");
+					continue;
+				}
+
+				Command cmd = Command.fromString(arguments.elementAt(0));
+
 				try {
 					execute(cmd, arguments);
 				} catch (ConnectException e) {
 					connectServer();
 					execute(cmd, arguments);
 				}
-			} catch (IllegalArgumentException|ServerException e) {
+			} catch (IllegalArgumentException | ServerException e) {
 				System.err.println((char)27 + "[31;1mCommand exception: " + (char)27 + "[0m" + e.getLocalizedMessage());
-			} catch (ConnectException|UnmarshalException e) {
+			} catch (ConnectException | UnmarshalException e) {
 				System.err.println((char)27 + "[31;1mCommand exception: " + (char)27 + "[0mConnection to server lost");
 			} catch (Exception e) {
 				System.err.println((char)27 + "[31;1mCommand exception: " + (char)27 + "[0mUncaught exception");
@@ -57,6 +69,7 @@ public abstract class Client {
 			}
 		}
 	}
+
 
 	public void execute(Command cmd, Vector<String> arguments) throws RemoteException, NumberFormatException {
 		switch (cmd) {
@@ -108,7 +121,7 @@ public abstract class Client {
 			// ---------------- Flight ----------------
 			case AddFlight: {
 				checkArgumentsCount(4, arguments.size());
-				int flightNum = toInt(arguments.elementAt(1));
+				String flightNum = arguments.elementAt(1);
 				int flightSeats = toInt(arguments.elementAt(2));
 				int flightPrice = toInt(arguments.elementAt(3));
 
@@ -121,7 +134,7 @@ public abstract class Client {
 			}
 			case DeleteFlight: {
 				checkArgumentsCount(2, arguments.size());
-				int flightNum = toInt(arguments.elementAt(1));
+				String flightNum = arguments.elementAt(1);
 				if (m_middleware.deleteFlight(currentTid, flightNum)) {
 					System.out.println("Flight Deleted");
 				} else {
@@ -131,14 +144,14 @@ public abstract class Client {
 			}
 			case QueryFlight: {
 				checkArgumentsCount(2, arguments.size());
-				int flightNum = toInt(arguments.elementAt(1));
+				String flightNum = arguments.elementAt(1);
 				int seats = m_middleware.queryFlight(currentTid, flightNum);
 				System.out.println("Seats available: " + seats);
 				break;
 			}
 			case QueryFlightPrice: {
 				checkArgumentsCount(2, arguments.size());
-				int flightNum = toInt(arguments.elementAt(1));
+				String flightNum = arguments.elementAt(1);
 				int price = m_middleware.queryFlightPrice(currentTid, flightNum);
 				System.out.println("Flight price: " + price);
 				break;
@@ -263,7 +276,7 @@ public abstract class Client {
 			case ReserveFlight: {
 				checkArgumentsCount(3, arguments.size());
 				int customerID = toInt(arguments.elementAt(1));
-				int flightNum = toInt(arguments.elementAt(2));
+				String flightNum = arguments.elementAt(2);
 				if (m_middleware.reserveFlight(currentTid, customerID, flightNum)) {
 					System.out.println("Flight Reserved");
 				} else {

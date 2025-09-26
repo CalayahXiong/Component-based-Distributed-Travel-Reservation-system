@@ -13,11 +13,11 @@ public abstract class FlightResourceManager extends ResourceManager {
     // -------------------------
 
     @Override
-    public boolean addFlight(int tid, int flightNum, int flightSeats, int flightPrice) throws RemoteException {
+    public boolean addFlight(int tid, String flightNum, int flightSeats, int flightPrice) throws RemoteException {
         String key = Flight.getKey(flightNum);
         try {
             if (!LM.lock(tid, key, LockManager.LockType.WRITE)) {
-                abort(tid);
+                //abort(tid);
                 throw new RemoteException("Lock failed in addFlight tid=" + tid);
             }
 
@@ -38,16 +38,16 @@ public abstract class FlightResourceManager extends ResourceManager {
             }
             return true;
         } catch (DeadlockException e) {
-            abort(tid);
+            //abort(tid);
             throw new RemoteException("Deadlock in addFlight tid=" + tid, e);
         }
     }
     @Override
-    public boolean deleteFlight(int tid, int flightNum) throws RemoteException {
+    public boolean deleteFlight(int tid, String flightNum) throws RemoteException {
         String key = Flight.getKey(flightNum);
         try {
             if (!LM.lock(tid, key, LockManager.LockType.WRITE)) {
-                abort(tid);
+                //abort(tid);
                 throw new RemoteException("Lock failed in deleteFlight tid=" + tid);
             }
 
@@ -70,16 +70,16 @@ public abstract class FlightResourceManager extends ResourceManager {
             Trace.info("RM::deleteFlight(" + tid + ", " + flightNum + ") succeeded (staged)");
             return true;
         } catch (DeadlockException e) {
-            abort(tid);
+            //abort(tid);
             throw new RemoteException("Deadlock in deleteFlight xid=" + tid, e);
         }
     }
     @Override
-    public int queryFlight(int tid, int flightNum) throws RemoteException {
+    public int queryFlight(int tid, String flightNum) throws RemoteException {
         String key = Flight.getKey(flightNum);
         try {
             if (!LM.lock(tid, key, LockManager.LockType.READ)) {
-                abort(tid);
+                //abort(tid);
                 throw new RemoteException("Lock failed in queryFlight tid=" + tid);
             }
 
@@ -92,16 +92,16 @@ public abstract class FlightResourceManager extends ResourceManager {
             Trace.info("RM::queryFlight(" + tid + ", " + flightNum + ") returns count=" + value);
             return value;
         } catch (DeadlockException e) {
-            abort(tid);
+            //abort(tid);
             throw new RemoteException("Deadlock in queryFlight xid=" + tid, e);
         }
     }
     @Override
-    public int queryFlightPrice(int tid, int flightNum) throws RemoteException {
+    public int queryFlightPrice(int tid, String flightNum) throws RemoteException {
         String key = Flight.getKey(flightNum);
         try {
             if (!LM.lock(tid, key, LockManager.LockType.READ)) {
-                abort(tid);
+                //abort(tid);
                 throw new RemoteException("Lock failed in queryFlightPrice tid=" + tid);
             }
 
@@ -114,27 +114,49 @@ public abstract class FlightResourceManager extends ResourceManager {
             Trace.info("RM::queryFlightPrice(" + tid + ", " + flightNum + ") returns cost=$" + value);
             return value;
         } catch (DeadlockException e) {
-            abort(tid);
+            //abort(tid);
             throw new RemoteException("Deadlock in queryFlightPrice xid=" + tid, e);
         }
     }
     @Override
-    public boolean reserveFlight(int tid, int customerID, int flightNum) throws RemoteException {
+    public boolean reserveFlight(int tid, int customerID, String flightNum) throws RemoteException {
         String key = Flight.getKey(flightNum);
         try {
             if (!LM.lock(tid, key, LockManager.LockType.WRITE)) {
-                abort(tid);
+                //abort(tid);
                 throw new RemoteException("Lock failed in reserveFlight tid=" + tid);
             }
-            //lock is true
-            return reserveItem(customerID, key, String.valueOf(flightNum));
+
+            // read from transactionData first, then fallback to m_data
+            Flight flight = (Flight) readTransactionData(tid, key);
+            if (flight == null) {
+                flight = (Flight) readData(key);
+            }
+
+            if (flight == null || flight.getCount() == 0) {
+                Trace.warn("RM::reserveFlight(" + tid + ", " + customerID + ", " + flightNum + ") failed -- no seats");
+                return false;
+            }
+
+            // decrement available seat count
+            flight.setCount(flight.getCount() - 1);
+            flight.setReserved(flight.getReserved() + 1);
+
+            // stage the change in transactionData (not m_data)
+            writeTransactionData(tid, key, flight);
+
+            Trace.info("RM::reserveFlight(" + tid + ", " + customerID + ", " + flightNum + ") succeeded (staged)");
+            return true;
+
         } catch (DeadlockException e) {
-            abort(tid);
+            //abort(tid);
             throw new RemoteException("Deadlock in reserveFlight xid=" + tid, e);
         }
     }
+
+    /*
     @Override
-    public boolean cancelFlightReservation(int tid, int customerID, Integer flightNum) throws RemoteException {
+    public boolean cancelFlightReservation(int tid, int customerID, String flightNum) throws RemoteException {
         String key = Flight.getKey(flightNum);
         try {
             if (!LM.lock(tid, key, LockManager.LockType.WRITE)) {
@@ -142,42 +164,51 @@ public abstract class FlightResourceManager extends ResourceManager {
                 throw new RemoteException("Lock failed in cancelFlightReservation tid=" + tid);
             }
 
+            // Load customer
             Customer customer = (Customer) readTransactionData(tid, Customer.getKey(customerID));
             if (customer == null) {
                 customer = (Customer) readData(Customer.getKey(customerID));
                 if (customer != null) {
-                    writeTransactionData(tid, customer.getKey(), (RMItem) customer.clone());
+                    customer = (Customer) customer.clone(); // clone to avoid touching global
+                    writeTransactionData(tid, customer.getKey(), customer);
                 }
             }
             if (customer == null || !customer.hasReserved(key)) {
                 return false;
             }
 
+            // Load flight
             Flight flight = (Flight) readTransactionData(tid, key);
             if (flight == null) {
                 flight = (Flight) readData(key);
                 if (flight != null) {
-                    writeTransactionData(tid, flight.getKey(), (RMItem) flight.clone());
+                    flight = (Flight) flight.clone();
+                    writeTransactionData(tid, flight.getKey(), flight);
                 }
             }
             if (flight == null) {
                 return false;
             }
 
-            customer.cancelReservation(key, String.valueOf(flightNum), flight.getPrice());
-            flight.setCount(flight.getCount() + 1);
-            flight.setReserved(flight.getReserved() - 1);
+            // Apply changes
+            //customer.cancelReservation(key, String.valueOf(flightNum), flight.getPrice());
+            //flight.setCount(flight.getCount() + 1);
+            //flight.setReserved(flight.getReserved() - 1);
 
+            // Write staged updates
             writeTransactionData(tid, customer.getKey(), customer);
             writeTransactionData(tid, flight.getKey(), flight);
 
             Trace.info("RM::cancelFlightReservation(" + tid + ", cust=" + customerID +
                     ", flight=" + flightNum + ") succeeded");
             return true;
+
         } catch (DeadlockException e) {
             abort(tid);
             throw new RemoteException("Deadlock in cancelFlightReservation xid=" + tid, e);
         }
     }
+    */
+
 
 }

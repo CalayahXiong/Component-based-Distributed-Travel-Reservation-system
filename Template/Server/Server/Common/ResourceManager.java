@@ -14,8 +14,7 @@ public abstract class ResourceManager implements IResourceManager
     protected String m_name = "";
     protected RMHashMap m_data = new RMHashMap(); // Global storage
     protected LockManager LM = new LockManager();  // Lock manager
-    protected Map<Integer, Map<String, RMItem>> transactionData = new HashMap<>(); // Transaction workspace
-
+	protected Map<Integer, Map<String, RMItem>> transactionData = new HashMap<>();// Transaction workspace
     public ResourceManager(String name) {
         m_name = name;
     }
@@ -24,8 +23,7 @@ public abstract class ResourceManager implements IResourceManager
     }
 
 	//-------------------------------------------------Common Usages--------------------------------
-	protected RMItem readData(String key)
-	{
+	protected RMItem readData(String key) {
 		synchronized(m_data) {
 			RMItem item = m_data.get(key);
 			if (item != null) {
@@ -35,22 +33,19 @@ public abstract class ResourceManager implements IResourceManager
 		}
 	}
 	// Writes a data item
-	protected void writeData(String key, RMItem value)
-	{
+	protected void writeData(String key, RMItem value) {
 		synchronized(m_data) {
 			m_data.put(key, value);
 		}
 	}
 	// Remove the item out of storage
-	protected void removeData(String key)
-	{
+	protected void removeData(String key) {
 		synchronized(m_data) {
 			m_data.remove(key);
 		}
 	}
 	// Deletes the encar item
-	protected boolean deleteItem(String key)
-	{
+	protected boolean deleteItem(String key) {
 		Trace.info("RM::deleteItem(" + key + ") called");
 		ReservableItem curObj = (ReservableItem)readData(key);
 		// Check if there is such an item in the storage
@@ -75,8 +70,7 @@ public abstract class ResourceManager implements IResourceManager
 		}
 	}
 	// Query the number of available seats/rooms/cars
-	protected int queryNum(String key)
-	{
+	protected int queryNum(String key) {
 		Trace.info("RM::queryNum(" + key + ") called");
 		ReservableItem curObj = (ReservableItem)readData(key);
 		int value = 0;
@@ -88,8 +82,7 @@ public abstract class ResourceManager implements IResourceManager
 		return value;
 	}
 	// Query the price of an item
-	protected int queryPrice(String key)
-	{
+	protected int queryPrice(String key) {
 		Trace.info("RM::queryPrice(" + key + ") called");
 		ReservableItem curObj = (ReservableItem)readData(key);
 		int value = 0;
@@ -100,9 +93,9 @@ public abstract class ResourceManager implements IResourceManager
 		Trace.info("RM::queryPrice(" + key + ") returns cost=$" + value);
 		return value;
 	}
+	@Override
 	// Reserve an item
-	protected boolean reserveItem(int customerID, String key, String location)
-	{
+	public boolean reserveItem(int customerID, String key, String location) {
 		Trace.info("RM::reserveItem(customer=" + customerID + ", " + key + ", " + location + ") called" );
 		// Read customer object if it exists (and read lock it)
 		Customer customer = (Customer)readData(Customer.getKey(customerID)); //这里读的是FRM的m_data,故 customer doesn't exist
@@ -126,7 +119,7 @@ public abstract class ResourceManager implements IResourceManager
 		}
 		else
 		{
-			customer.reserve(key, location, item.getPrice());
+			customer.reserve(key, item.getPrice());
 			writeData(customer.getKey(), customer);
 
 			// Decrease the number of available items in the storage
@@ -140,13 +133,12 @@ public abstract class ResourceManager implements IResourceManager
 	}
 
 	//--------------------------------------------------Flight----------------------------------------------
-    public abstract boolean addFlight(int tid, int flightNum, int flightSeats, int flightPrice) throws RemoteException;
+    public abstract boolean addFlight(int tid, String flightNum, int flightSeats, int flightPrice) throws RemoteException;
     public abstract boolean deleteFlight(int tid, int flightNum) throws RemoteException;
     public abstract int queryFlight(int tid, int flightNumber) throws RemoteException;
     public abstract int queryFlightPrice(int tid, int flightNumber) throws RemoteException;
     public abstract boolean reserveFlight(int tid, int customerID, int flightNumber) throws RemoteException;
     public abstract boolean cancelFlightReservation(int tid, int customerID, Integer f) throws RemoteException;
-
 
     //--------------------------------------------------Car---------------------------------
     public abstract boolean addCars(int tid, String location, int numCars, int price) throws RemoteException;
@@ -154,8 +146,7 @@ public abstract class ResourceManager implements IResourceManager
     public abstract int queryCars(int tid, String location) throws RemoteException;
     public abstract int queryCarsPrice(int tid, String location) throws RemoteException;
     public abstract boolean reserveCar(int tid, int customerID, String location) throws RemoteException;
-    public abstract boolean cancelCarReservation(int tid, int customerID, String location) throws RemoteException;
-
+    //public abstract boolean cancelCarReservation(int tid, int customerID, String location) throws RemoteException;
 
 	//------------------------------------------------------Room-------------------------------
     public abstract boolean addRooms(int tid, String location, int numRooms, int price) throws RemoteException;
@@ -163,8 +154,7 @@ public abstract class ResourceManager implements IResourceManager
     public abstract int queryRooms(int tid, String location) throws RemoteException;
     public abstract int queryRoomsPrice(int tid, String location) throws RemoteException;
     public abstract boolean reserveRoom(int tid, int customerID, String location) throws RemoteException;
-    public abstract boolean cancelRoomReservation(int tid, int customerID, String location) throws RemoteException;
-
+    //public abstract boolean cancelRoomReservation(int tid, int customerID, String location) throws RemoteException;
 
 	//---------------------------------------------------Customer---------------------------------------
     public abstract int newCustomer(int tid) throws RemoteException;
@@ -180,8 +170,9 @@ public abstract class ResourceManager implements IResourceManager
 		}
 		return null;
 	}
-	protected void writeTransactionData(int tid, String key, RMItem item){
+	protected boolean writeTransactionData(int tid, String key, RMItem item){
 		transactionData.computeIfAbsent(tid, k -> new HashMap<>()).put(key, item);
+		return true;
 	}
 	@Override
 	public boolean prepare(int tid) throws RemoteException {
@@ -233,12 +224,43 @@ public abstract class ResourceManager implements IResourceManager
 		Trace.info("RM::commit(" + tid + ") done");
 		return true;
 	}
+
+	/**
+	 * Called by MW.TM, when prepare fail
+	 * @param tid
+	 * @return
+	 * @throws RemoteException
+	 */
 	@Override
 	public boolean abort(int tid) throws RemoteException {
 		Trace.info("RM::abort(" + tid + ") called");
 		transactionData.remove(tid);
 		LM.releaseLocks(tid); //
 		Trace.info("RM::abort(" + tid + ") rollback done");
+		return true;
+	}
+
+	@Override
+	public boolean rollbackReserve(int tid, int cid, String key) throws RemoteException {
+		Trace.info("RM::rollbackReserve(" + tid + ", cust=" + cid + ", key=" + key + ") called");
+
+		// get this transaction's workspace
+		RMHashMap tData = (RMHashMap) transactionData.get(tid);
+		if (tData == null) {
+			Trace.warn("RM::rollbackReserve(" + tid + ") no staged data found");
+			return false;
+		}
+
+		// check if key exists in staged data
+		if (!tData.containsKey(key)) {
+			Trace.warn("RM::rollbackReserve(" + tid + ") no staged modification for key=" + key);
+			return false;
+		}
+
+		// remove the staged modification
+		tData.remove(key);
+
+		Trace.info("RM::rollbackReserve(" + tid + ", cust=" + cid + ", key=" + key + ") rolled back staged change");
 		return true;
 	}
 

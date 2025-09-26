@@ -20,7 +20,7 @@ public class RMICustomerServer extends CustomerManager  {
     // ------------------------ Stub methods for unsupported operations ------------------------
     // Flights
     @Override
-    public boolean addFlight(int tid, int flightNum, int flightSeats, int flightPrice) throws RemoteException {
+    public boolean addFlight(int tid, String flightNum, int flightSeats, int flightPrice) throws RemoteException {
         throw new UnsupportedOperationException("Customer RM does not handle flights");
     }
 
@@ -49,6 +49,31 @@ public class RMICustomerServer extends CustomerManager  {
         throw new UnsupportedOperationException("Customer RM does not handle flights");
     }
 
+    @Override
+    public boolean deleteFlight(int tid, String flightNum) throws RemoteException {
+        throw new UnsupportedOperationException("Customer RM does not handle flights");
+    }
+
+    @Override
+    public int queryFlight(int tid, String flightNumber) throws RemoteException {
+        throw new UnsupportedOperationException("Customer RM does not handle flights");
+    }
+
+    @Override
+    public int queryFlightPrice(int tid, String flightNumber) throws RemoteException {
+        throw new UnsupportedOperationException("Customer RM does not handle flights");
+    }
+
+    @Override
+    public boolean reserveFlight(int tid, int customerID, String flightNumber) throws RemoteException {
+        throw new UnsupportedOperationException("Customer RM does not handle flights");
+    }
+
+//    @Override
+//    public boolean cancelFlightReservation(int tid, int customerID, String f) throws RemoteException {
+//        throw new UnsupportedOperationException("Customer RM does not handle flights");
+//    }
+
     // Cars
     @Override
     public boolean addCars(int tid, String location, int numCars, int price) throws RemoteException {
@@ -75,10 +100,10 @@ public class RMICustomerServer extends CustomerManager  {
         throw new UnsupportedOperationException("Customer RM does not handle cars");
     }
 
-    @Override
-    public boolean cancelCarReservation(int tid, int customerID, String location) throws RemoteException {
-        throw new UnsupportedOperationException("Customer RM does not handle cars");
-    }
+//    @Override
+//    public boolean cancelCarReservation(int tid, int customerID, String location) throws RemoteException {
+//        throw new UnsupportedOperationException("Customer RM does not handle cars");
+//    }
 
     // Rooms
     @Override
@@ -106,10 +131,10 @@ public class RMICustomerServer extends CustomerManager  {
         throw new UnsupportedOperationException("Customer RM does not handle rooms");
     }
 
-    @Override
-    public boolean cancelRoomReservation(int tid, int customerID, String location) throws RemoteException {
-        throw new UnsupportedOperationException("Customer RM does not handle rooms");
-    }
+//    @Override
+//    public boolean cancelRoomReservation(int tid, int customerID, String location) throws RemoteException {
+//        throw new UnsupportedOperationException("Customer RM does not handle rooms");
+//    }
 
     // ------------------------ Main method for RMI export ------------------------
     public static void main(String[] args) {
