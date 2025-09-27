@@ -153,6 +153,25 @@ public abstract class FlightResourceManager extends ResourceManager {
             throw new RemoteException("Deadlock in reserveFlight xid=" + tid, e);
         }
     }
+    @Override
+    public boolean flightExists(int tid, String flightNum) throws RemoteException{
+        String key = Flight.getKey(flightNum);
+        try {
+            if (!LM.lock(tid, key, LockManager.LockType.READ)) {
+                //abort(tid);
+                throw new RemoteException("Lock failed in querying Flight tid=" + tid);
+            }
+
+            Flight curObj = (Flight) readTransactionData(tid, key);
+            if (curObj == null) {
+                curObj = (Flight) readData(key);
+            }
+            return (curObj == null) ? false : true;
+        } catch (DeadlockException e) {
+            //abort(tid);
+            throw new RemoteException("Deadlock in checking Flight xid=" + tid, e);
+        }
+    }
 
     /*
     @Override

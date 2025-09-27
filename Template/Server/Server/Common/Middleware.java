@@ -25,6 +25,11 @@ public class Middleware implements IMiddleware {
         this.TM = new TransactionalManager();
     }
 
+    @Override
+    public String getName() throws RemoteException {
+        return "Middleware";
+    }
+
     // -------------------- Transaction Lifecycle --------------------
     @Override
     public int startTransaction() throws RemoteException {
@@ -43,7 +48,7 @@ public class Middleware implements IMiddleware {
         return TM.abort(tid, rms);
     }
 
-    // -------------------- Flight --------------------
+    // -------------------- FlightRM --------------------
     @Override
     public boolean addFlight(int tid, String flightNum, int flightSeats, int flightPrice) throws RemoteException {
         return flightRM.addFlight(tid, flightNum, flightSeats, flightPrice);
@@ -51,8 +56,31 @@ public class Middleware implements IMiddleware {
 
     @Override
     public boolean deleteFlight(int tid, String flightNum) throws RemoteException {
-        return flightRM.deleteFlight(tid, flightNum);
+        try {
+            if (!flightRM.flightExists(tid, flightNum)) {
+                Trace.warn("MW::deleteFlight(" + tid + ", " + flightNum + ") failed -- flight not found");
+                return false;
+            }
+            String fKey = Flight.getKey(flightNum);
+            int reserved = flightRM.queryReserved(tid, fKey);
+            if (reserved > 0) {
+                Trace.warn("MW::deleteFlight(" + tid + ", " + flightNum + ") failed -- flight has reservations");
+                return false;
+            }
+
+            boolean deleted = flightRM.deleteFlight(tid, flightNum);
+            if (deleted) {
+                Trace.info("MW::deleteFlight(" + tid + ", " + flightNum + ") succeeded");
+            } else {
+                Trace.warn("MW::deleteFlight(" + tid + ", " + flightNum + ") failed in FlightRM");
+            }
+            return deleted;
+
+        } catch (Exception e) {
+            throw new RemoteException("MW::deleteFlight(" + tid + ", " + flightNum + ") failed due to exception", e);
+        }
     }
+
 
     @Override
     public int queryFlight(int tid, String flightNumber) throws RemoteException {
@@ -64,7 +92,7 @@ public class Middleware implements IMiddleware {
         return flightRM.queryFlightPrice(tid, flightNumber);
     }
 
-    // -------------------- Car --------------------
+    // -------------------- CarRM --------------------
     @Override
     public boolean addCars(int tid, String location, int count, int price) throws RemoteException {
         return carRM.addCars(tid, location, count, price);
@@ -85,7 +113,7 @@ public class Middleware implements IMiddleware {
         return carRM.queryCarsPrice(tid, location);
     }
 
-    // -------------------- Room --------------------
+    // -------------------- RoomRM --------------------
     @Override
     public boolean addRooms(int tid, String location, int count, int price) throws RemoteException {
         return roomRM.addRooms(tid, location, count, price);
@@ -106,7 +134,7 @@ public class Middleware implements IMiddleware {
         return roomRM.queryRoomsPrice(tid, location);
     }
 
-    // -------------------- Customer --------------------
+    // -------------------- CustomerM --------------------
     @Override
     public int newCustomer(int tid) throws RemoteException {
         return customerRM.newCustomer(tid);
@@ -119,7 +147,51 @@ public class Middleware implements IMiddleware {
 
     @Override
     public boolean deleteCustomer(int tid, int customerID) throws RemoteException {
-        return customerRM.deleteCustomer(tid, customerID);
+        String cuKey = Customer.getKey(customerID);
+
+        try {
+            Customer cust = (Customer) customerRM.getItem(tid, cuKey);
+            if (cust == null) {
+                Trace.warn("MW::deleteCustomer(" + tid + ", " + customerID + ") failed -- no such customer");
+                return false;
+            }
+
+            RMHashMap reservations = cust.getReservations();
+            Vector<String> flights = new Vector<>();
+            Vector<String> cars = new Vector<>();
+            Vector<String> rooms = new Vector<>();
+
+            for (String reservedKey : reservations.keySet()) {
+                if (reservedKey.startsWith("flight-")) {
+                    flights.add(reservedKey.split("-")[1]);   // flight number
+                } else if (reservedKey.startsWith("car-")) {
+                    cars.add(reservedKey.split("-")[1]);      // car location
+                } else if (reservedKey.startsWith("room-")) {
+                    rooms.add(reservedKey.split("-")[1]);     // room location
+                }
+            }
+
+            if (!rollbackReservations(tid, customerID, flights, cars, rooms)) {
+                Trace.warn("MW::deleteCustomer(" + tid + ", " + customerID + ") rollback failed");
+                return false;
+            }
+
+            boolean deleted = customerRM.deleteCustomer(tid, customerID);
+            if (deleted) {
+                Trace.info("MW::deleteCustomer(" + tid + ", " + customerID + ") succeeded");
+            } else {
+                Trace.warn("MW::deleteCustomer(" + tid + ", " + customerID + ") failed in CustomerRM");
+            }
+            return deleted;
+
+        } catch (RemoteException e) {
+            Trace.error("MW::deleteCustomer(" + tid + ", " + customerID + ") RemoteException: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            Trace.error("MW::deleteCustomer(" + tid + ", " + customerID + ") Exception: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
     }
 
     @Override
@@ -247,44 +319,49 @@ public class Middleware implements IMiddleware {
     public boolean bundle(int tid, int customerID, Vector<String> flightNumbers,
                           String location, boolean car, boolean room) throws RemoteException {
         Vector<String> reservedFlights = new Vector<>();
-        boolean carReserved = false;
-        boolean roomReserved = false;
+        Vector<String> reservedCars = new Vector<>();
+        Vector<String> reservedRooms = new Vector<>();
 
         try {
-            // Reserve flights first
+            // 1. Reserve flights first
             for (String f : flightNumbers) {
                 if (reserveFlight(tid, customerID, f)) {
                     reservedFlights.add(f);
                 } else {
-                    rollbackReservations(tid, customerID, reservedFlights, carReserved, roomReserved, location);
+                    rollbackReservations(tid, customerID, reservedFlights, reservedCars, reservedRooms);
                     return false;
                 }
             }
 
-            // Reserve car
+            // 2. Reserve car
             if (car) {
-                carReserved = reserveCar(tid, customerID, location);
-                if (!carReserved) {
-                    rollbackReservations(tid, customerID, reservedFlights, carReserved, roomReserved, location);
+                if (reserveCar(tid, customerID, location)) {
+                    reservedCars.add(location);
+                } else {
+                    rollbackReservations(tid, customerID, reservedFlights, reservedCars, reservedRooms);
                     return false;
                 }
             }
 
-            // Reserve room
+            // 3. Reserve room
             if (room) {
-                roomReserved = reserveRoom(tid, customerID, location);
-                if (!roomReserved) {
-                    rollbackReservations(tid, customerID, reservedFlights, carReserved, roomReserved, location);
+                if (reserveRoom(tid, customerID, location)) {
+                    reservedRooms.add(location);
+                } else {
+                    rollbackReservations(tid, customerID, reservedFlights, reservedCars, reservedRooms);
                     return false;
                 }
             }
 
-            return true; // success
+            // 4. Success
+            return true;
+
         } catch (RemoteException e) {
-            rollbackReservations(tid, customerID, reservedFlights, carReserved, roomReserved, location);
-            throw e; // propagate exception
+            rollbackReservations(tid, customerID, reservedFlights, reservedCars, reservedRooms);
+            throw e; // rethrow to client
         }
     }
+
 
     /**
      * Rollback staged reservations if bundle fails.
@@ -292,43 +369,51 @@ public class Middleware implements IMiddleware {
     private boolean rollbackReservations(int tid,
                                          int customerID,
                                          Vector<String> reservedFlights,
-                                         boolean carReserved,
-                                         boolean roomReserved,
-                                         String location) {
-        boolean rollbackSuccess = true;
+                                         Vector<String> reservedCars,
+                                         Vector<String> reservedRooms) throws RemoteException {
+        boolean success = true;
 
-        try {
-            // Undo flights
-            for (String f : reservedFlights) {
-                if (!flightRM.rollbackReserve(tid, customerID, f)) {
-                    rollbackSuccess = false;
-                }
+        // 1. rollback flights
+        for (String f : reservedFlights) {
+            String flightKey = Flight.getKey(f);
+            if (!flightRM.rollbackReserve(tid, customerID, flightKey)) {
+                Trace.warn("MW::rollbackReservations(" + tid + ", cust=" + customerID + ") failed rollback for flight=" + f);
+                success = false;
             }
-
-            // Undo car
-            if (carReserved) {
-                if (!carRM.rollbackReserve(tid, customerID, location)) {
-                    rollbackSuccess = false;
-                }
+            if (!customerRM.rollbackReserve(tid, customerID, flightKey)) {
+                Trace.warn("MW::rollbackReservations(" + tid + ", cust=" + customerID + ") failed rollback in CustomerRM for flight=" + f);
+                success = false;
             }
-
-            // Undo room
-            if (roomReserved) {
-                if (!roomRM.rollbackReserve(tid, customerID, location)) {
-                    rollbackSuccess = false;
-                }
-            }
-        } catch (RemoteException e) {
-            e.printStackTrace();
-            rollbackSuccess = false;
         }
 
-        return rollbackSuccess;
+        // 2. rollback cars
+        for (String loc : reservedCars) {
+            String carKey = Car.getKey(loc);
+            if (!carRM.rollbackReserve(tid, customerID, carKey)) {
+                Trace.warn("MW::rollbackReservations(" + tid + ", cust=" + customerID + ") failed rollback for car@" + loc);
+                success = false;
+            }
+            if (!customerRM.rollbackReserve(tid, customerID, carKey)) {
+                Trace.warn("MW::rollbackReservations(" + tid + ", cust=" + customerID + ") failed rollback in CustomerRM for car@" + loc);
+                success = false;
+            }
+        }
+
+        // 3. rollback rooms
+        for (String loc : reservedRooms) {
+            String roomKey = Room.getKey(loc);
+            if (!roomRM.rollbackReserve(tid, customerID, roomKey)) {
+                Trace.warn("MW::rollbackReservations(" + tid + ", cust=" + customerID + ") failed rollback for room@" + loc);
+                success = false;
+            }
+            if (!customerRM.rollbackReserve(tid, customerID, roomKey)) {
+                Trace.warn("MW::rollbackReservations(" + tid + ", cust=" + customerID + ") failed rollback in CustomerRM for room@" + loc);
+                success = false;
+            }
+        }
+
+        return success;
     }
 
 
-    @Override
-    public String getName() throws RemoteException {
-        return "Middleware";
-    }
 }

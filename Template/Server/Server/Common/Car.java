@@ -9,12 +9,12 @@ public class Car extends ReservableItem
 {
 	public Car(String location, int count, int price)
 	{
-		super(location, count, price);
+		super("car-"+location, count, price);
 	}
 
 	public String getKey()
 	{
-		return Car.getKey(getLocation());
+		return Car.getKey(getKey());
 	}
 
 	public static String getKey(String location)

@@ -1,87 +1,100 @@
 package Server.Common;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.rmi.RemoteException;
+import java.util.*;
 
 public class LockManager {
-    public enum LockType { READ, WRITE } //read left for future
-    private final Map<String, List<Lock>> locks = new HashMap<>(); //
-    private final Map<Integer, List<String>> transactionLocks = new HashMap<>(); // TID -> R
+    public enum LockType { READ, WRITE }
 
-    private static class Lock {
-        int tid;
-        LockType type;
-
-        Lock(int tid, LockType type) {
-            this.tid = tid;
-            this.type = type;
-        }
-    }
+    // resource -> (tid -> lockType)
+    private final Map<String, Map<Integer, LockType>> locks = new HashMap<>();
+    // tid -> set of resources
+    private final Map<Integer, Set<String>> transactionLocks = new HashMap<>();
 
     /**
-     * Given a transaction ID, a resource, means this transaction needs this resource.
-     * This function is asking to lock this resource for transaction ID.
-     * If this resource is locked by another transaction, return False -> locking request failed. So this transaction failed.
-     * @param tid
-     * @param resource
-     * @return
+     * Try to acquire a lock on a resource for a transaction.
+     * @param tid transaction id
+     * @param resource resource key
+     * @param type requested lock type
+     * @return true if lock granted, false if conflict
      */
     public synchronized boolean lock(int tid, String resource, LockType type) throws DeadlockException{
-        List<Lock> currentLocks = locks.computeIfAbsent(resource, k -> new ArrayList<>());
+        try {
+            locks.putIfAbsent(resource, new HashMap<>());
+            Map<Integer, LockType> holders = locks.get(resource);
 
-        // no lock, can be locked directly
-        if (currentLocks.isEmpty()) {
-            currentLocks.add(new Lock(tid, type));
-            transactionLocks.computeIfAbsent(tid, k -> new ArrayList<>()).add(resource);
-            return true;
-        }
-
-        // locked but is read request
-        if (type == LockType.READ) {
-            // they are all read type
-            if (currentLocks.stream().allMatch(l -> l.type == LockType.READ)) {
-                currentLocks.add(new Lock(tid, type));
-                transactionLocks.computeIfAbsent(tid, k -> new ArrayList<>()).add(resource);
+            // Case 1: resource not locked
+            if (holders.isEmpty()) {
+                holders.put(tid, type);
+                transactionLocks.computeIfAbsent(tid, k -> new HashSet<>()).add(resource);
                 return true;
             }
-            // there is a write lock, then has to wait
-            return false;
-        }
 
-        // locked and is write request
-        if (type == LockType.WRITE) {
-            // locked but the reading owner is itself
-            // cannot upgrade the read lock to write lock when there are more than 1 reading lock, cuz it will cause conflicts in reading content
-            if (currentLocks.size() == 1 && currentLocks.get(0).tid == tid) {
-                currentLocks.get(0).type = LockType.WRITE;
-                return true;
+            // Case 2: transaction already holds a lock
+            if (holders.containsKey(tid)) {
+                LockType current = holders.get(tid);
+
+                // Already has WRITE
+                if (current == LockType.WRITE) {
+                    return true; // nothing to change
+                }
+
+                // Already has READ
+                if (current == LockType.READ && type == LockType.READ) {
+                    return true; // reentrant read
+                }
+
+                // Upgrade READ -> WRITE (only if no other holders)
+                if (current == LockType.READ && type == LockType.WRITE) {
+                    if (holders.size() == 1) {
+                        holders.put(tid, LockType.WRITE);
+                        return true;
+                    } else {
+                        return false; // other readers exist
+                    }
+                }
             }
-            //
+
+            // Case 3: other transactions hold locks
+            if (type == LockType.READ) {
+                // allow if no WRITE locks exist
+                boolean hasWrite = holders.values().stream().anyMatch(t -> t == LockType.WRITE);
+                if (!hasWrite) {
+                    holders.put(tid, LockType.READ);
+                    transactionLocks.computeIfAbsent(tid, k -> new HashSet<>()).add(resource);
+                    return true;
+                }
+            } else if (type == LockType.WRITE) {
+                // cannot grant if any other holders exist
+                return false;
+            }
+
+            return false;
+        } catch (Exception e) {
+            System.err.println("LockManager::lock failed for T" + tid + " on " + resource + " -> " + e.getMessage());
+            releaseLocksSafe(tid);
             return false;
         }
-
-        return false;
     }
 
     /**
-     * Transaction id is done, the resources it occupied before should all be unlocked.
-     * @param tid
+     * Release all locks held by a transaction.
      */
-    public synchronized void releaseLocks(int tid) {
-        List<String> resources = transactionLocks.remove(tid);
-        if (resources != null) {
-            for (String res : resources) {
-                locks.get(res).removeIf(l -> l.tid == tid);
-                if (locks.get(res).isEmpty()) {
-                    locks.remove(res);
-                }
-            }
+    public synchronized void releaseLocks(int tid) throws RemoteException {
+        try {
+            releaseLocksSafe(tid);
+        } catch (Exception e) {
+            throw new RemoteException("LockManager::releaseLocks failed for T" + tid, e);
         }
-        //Trace.info("RM::release(" + tid + ") locks");
-        System.out.println("Release occurred, locks for: " + tid);
     }
 
+    private void releaseLocksSafe(int tid) {
+        // remove tid from all resources
+        for (Map<Integer, LockType> holders : locks.values()) {
+            holders.remove(tid);
+        }
+        // clear record of this transaction
+        transactionLocks.remove(tid);
+        System.out.println("LockManager::releaseLocks released all locks for T" + tid);
+    }
 }
-

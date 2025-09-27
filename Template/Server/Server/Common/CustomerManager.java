@@ -1,21 +1,15 @@
 package Server.Common;
 
-import Server.Interface.IResourceManager;
-
 import java.rmi.RemoteException;
 import java.util.Calendar;
-import java.util.Vector;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class CustomerManager extends ResourceManager {
-
-    private final AtomicInteger localCounter = new AtomicInteger(0);
 
     public CustomerManager(String p_name) {
         super(p_name);
     }
 
-    //-----------------------------------------------------Customer-------------------------------------
+    //-----------------------------------Customer-------------------------------------
     @Override
     public String queryCustomerInfo(int tid, int customerID) throws RemoteException {
         String key = Customer.getKey(customerID);
@@ -47,11 +41,11 @@ public abstract class CustomerManager extends ResourceManager {
     public int newCustomer(int tid) throws RemoteException {
         Trace.info("RM::newCustomer() called");
         // Generate a globally unique ID for the new customer; if it generates duplicates for you, then adjust
-        int cid = Integer.parseInt(String.valueOf(Calendar.getInstance().get(Calendar.MILLISECOND)) +
+        int cid = Integer.parseInt(Calendar.getInstance().get(Calendar.MILLISECOND) +
                 String.valueOf(Math.round(Math.random() * 100 + 1)));
         Customer customer = new Customer(cid);
-        writeData(customer.getKey(), customer);
-        Trace.info("RM::newCustomer(" + cid + ") returns ID=" + cid);
+        writeTransactionData(tid, customer.getKey(), customer);
+        Trace.info("RM::newCustomer(" + tid + ") created customer ID=" + cid);
         return cid;
     }
     @Override
@@ -100,29 +94,7 @@ public abstract class CustomerManager extends ResourceManager {
                 Trace.warn("RM::deleteCustomer(" + tid + ", " + customerID + ") failed -- doesn't exist");
                 return false;
             }
-
-            //  rollback reservations
-            RMHashMap reservations = customer.getReservations();
-            for (String reservedKey : reservations.keySet()) {
-                ReservedItem reservedItem = customer.getReservedItem(reservedKey);
-
-                if (!LM.lock(tid, reservedKey, LockManager.LockType.WRITE)) {
-                    //abort(tid);
-                    throw new RemoteException("Lock denied in deleteCustomer xid=" + tid + " for resource=" + reservedKey);
-                }
-
-                ReservableItem item = (ReservableItem) readTransactionData(tid, reservedKey);
-                if (item == null) {
-                    item = (ReservableItem) readData(reservedKey);
-                }
-
-                if (item != null) {
-                    item.setReserved(item.getReserved() - reservedItem.getCount());
-                    item.setCount(item.getCount() + reservedItem.getCount());
-                    writeTransactionData(tid, reservedKey, item);
-                }
-            }
-
+            //the transaction of this cust will be clear, but the account?
             writeTransactionData(tid, key, null);
 
             Trace.info("RM::deleteCustomer(" + tid + ", " + customerID + ") staged delete");
@@ -174,6 +146,9 @@ public abstract class CustomerManager extends ResourceManager {
             Customer customer = (Customer) readTransactionData(tid, custKey);
             if (customer == null) {
                 customer = (Customer) readData(custKey);
+                if(customer != null){
+                    customer = (Customer) customer.clone();
+                }
             }
 
             if (customer == null) {
@@ -187,9 +162,9 @@ public abstract class CustomerManager extends ResourceManager {
                 item = new ReservedItem(key, count, price); // location/key needed
             } else {
                 item.setCount(item.getCount() + count);
-                item.setPrice(price); // overwrite with latest price
+                item.setPrice(price); // overwrite with the latest price
             }
-            customer.getReservations().put(key, item);
+            customer.getReservations().put(key, item); //this will return a clone of the customer's reservation, so customer's reservation still unchange
 
             // Write full customer back to transactionData (not just item!)
             writeTransactionData(tid, custKey, customer);
@@ -202,4 +177,31 @@ public abstract class CustomerManager extends ResourceManager {
             throw new RemoteException("Deadlock in customerReserve xid=" + tid, e);
         }
     }
+
+//    @Override
+//    public Customer getCustomer(int tid, int cid) throws RemoteException{
+//        String key = Customer.getKey(cid);
+//        try {
+//            if (!LM.lock(tid, key, LockManager.LockType.READ)) {
+//                //abort(tid);
+//                throw new RemoteException("Lock denied in getting Customer xid=" + tid);
+//            }
+//
+//            Customer customer = (Customer) readTransactionData(tid, key);
+//            if (customer == null) {
+//                customer = (Customer) readData(key);
+//                //System.out.println("Customer" + customerID + " from m_data");
+//            }
+//
+//            if (customer == null) {
+//                Trace.warn("RM::Getting Customer(" + tid + ", " + cid + ") failed -- customer doesn't exist");
+//                return null;
+//            } else {
+//                Trace.info("RM::Getting Customer(" + tid + ", " + cid + ")");
+//                return customer;
+//            }
+//        } catch (DeadlockException e) {
+//            throw new RemoteException("Deadlock in queryCustomer xid=" + tid, e);
+//        }
+//    }
 }

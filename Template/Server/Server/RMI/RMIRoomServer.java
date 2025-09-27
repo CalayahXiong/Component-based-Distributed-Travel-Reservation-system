@@ -45,29 +45,34 @@ public class RMIRoomServer extends RoomResourceManager {
     }
 
     @Override
-    public boolean deleteFlight(int tid, int flightNum) throws RemoteException {
+    public boolean flightExists(int tid, String flightNumber) throws RemoteException {
         throw new UnsupportedOperationException("Room RM does not handle flights");
     }
 
-    @Override
-    public int queryFlight(int tid, int flightNumber) throws RemoteException {
-        throw new UnsupportedOperationException("Room RM does not handle flights");
-    }
+//    @Override
+//    public boolean deleteFlight(int tid, int flightNum) throws RemoteException {
+//        throw new UnsupportedOperationException("Room RM does not handle flights");
+//    }
 
-    @Override
-    public int queryFlightPrice(int tid, int flightNumber) throws RemoteException {
-        throw new UnsupportedOperationException("Room RM does not handle flights");
-    }
-
-    @Override
-    public boolean reserveFlight(int tid, int customerID, int flightNumber) throws RemoteException {
-        throw new UnsupportedOperationException("Room RM does not handle flights");
-    }
-
-    @Override
-    public boolean cancelFlightReservation(int tid, int customerID, Integer f) throws RemoteException {
-        throw new UnsupportedOperationException("Room RM does not handle flights");
-    }
+//    @Override
+//    public int queryFlight(int tid, int flightNumber) throws RemoteException {
+//        throw new UnsupportedOperationException("Room RM does not handle flights");
+//    }
+//
+//    @Override
+//    public int queryFlightPrice(int tid, int flightNumber) throws RemoteException {
+//        throw new UnsupportedOperationException("Room RM does not handle flights");
+//    }
+//
+//    @Override
+//    public boolean reserveFlight(int tid, int customerID, int flightNumber) throws RemoteException {
+//        throw new UnsupportedOperationException("Room RM does not handle flights");
+//    }
+//
+//    @Override
+//    public boolean cancelFlightReservation(int tid, int customerID, Integer f) throws RemoteException {
+//        throw new UnsupportedOperationException("Room RM does not handle flights");
+//    }
 
     // Cars
     @Override

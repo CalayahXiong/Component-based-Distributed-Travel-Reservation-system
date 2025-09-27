@@ -9,12 +9,12 @@ public class Room extends ReservableItem
 {
 	public Room(String location, int count, int price)
 	{
-		super(location, count, price);
+		super("room-"+location, count, price);
 	}
 
 	public String getKey()
 	{
-		return Room.getKey(getLocation());
+		return Room.getKey(getKey());
 	}
 
 	public static String getKey(String location)

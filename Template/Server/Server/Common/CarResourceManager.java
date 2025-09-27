@@ -121,15 +121,40 @@ public abstract class CarResourceManager extends ResourceManager {
         String key = Car.getKey(location);
         try {
             if (!LM.lock(tid, key, LockManager.LockType.WRITE)) {
-                //abort(tid);
                 throw new RemoteException("Lock denied in reserveCar xid=" + tid);
             }
-            return reserveItem(customerID, key, location);
+
+            Car car = (Car) readTransactionData(tid, key);
+            if (car == null) {
+                car = (Car) readData(key);
+                if (car != null) {
+                    writeTransactionData(tid, key, (RMItem) car.clone());
+                }
+            }
+
+            if (car == null) {
+                Trace.warn("CarRM::reserveCar(" + tid + ", " + customerID + ", " + location + ") failed -- no such location");
+                return false;
+            }
+
+            if (car.getCount() == 0) {
+                Trace.warn("CarRM::reserveCar(" + tid + ", " + customerID + ", " + location + ") failed -- no cars available");
+                return false;
+            }
+
+            car.setCount(car.getCount() - 1);
+            car.setReserved(car.getReserved() + 1);
+
+            writeTransactionData(tid, key, car);
+
+            Trace.info("CarRM::reserveCar(" + tid + ", " + customerID + ", " + location + ") succeeded");
+            return true;
+
         } catch (DeadlockException e) {
-            //abort(tid);
             throw new RemoteException("Deadlock in reserveCar xid=" + tid, e);
         }
     }
+
 //    @Override
 //    public boolean cancelCarReservation(int tid, int customerID, String location) throws RemoteException {
 //        String key = Car.getKey(location);

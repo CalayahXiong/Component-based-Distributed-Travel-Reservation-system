@@ -121,15 +121,40 @@ public abstract class RoomResourceManager extends ResourceManager {
         String key = Room.getKey(location);
         try {
             if (!LM.lock(tid, key, LockManager.LockType.WRITE)) {
-                //abort(tid);
                 throw new RemoteException("Lock denied in reserveRoom xid=" + tid);
             }
-            return reserveItem(customerID, key, location);
+
+            Room room = (Room) readTransactionData(tid, key);
+            if (room == null) {
+                room = (Room) readData(key);
+                if (room != null) {
+                    writeTransactionData(tid, key, (RMItem) room.clone());
+                }
+            }
+
+            if (room == null) {
+                Trace.warn("RoomRM::reserveRoom(" + tid + ", " + customerID + ", " + location + ") failed -- no such location");
+                return false;
+            }
+
+            if (room.getCount() == 0) {
+                Trace.warn("RoomRM::reserveRoom(" + tid + ", " + customerID + ", " + location + ") failed -- no rooms available");
+                return false;
+            }
+
+            room.setCount(room.getCount() - 1);
+            room.setReserved(room.getReserved() + 1);
+
+            writeTransactionData(tid, key, room);
+
+            Trace.info("RoomRM::reserveRoom(" + tid + ", " + customerID + ", " + location + ") succeeded");
+            return true;
+
         } catch (DeadlockException e) {
-            //abort(tid);
             throw new RemoteException("Deadlock in reserveRoom xid=" + tid, e);
         }
     }
+
 //    @Override
 //    public boolean cancelRoomReservation(int tid, int customerID, String location) throws RemoteException {
 //        String key = Room.getKey(location);

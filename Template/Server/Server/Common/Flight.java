@@ -9,12 +9,12 @@ public class Flight extends ReservableItem
 {
 	public Flight(String flightNum, int flightSeats, int flightPrice)
 	{
-		super(flightNum, flightSeats, flightPrice);
+		super("flight-"+flightNum, flightSeats, flightPrice);
 	}
 
 	public String getKey()
 	{
-		return getLocation();
+		return getKey();
 	}
 
 	public static String getKey(String flightNum)

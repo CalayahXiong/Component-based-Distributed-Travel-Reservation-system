@@ -13,12 +13,12 @@ public abstract class ReservableItem extends RMItem implements Serializable
 	private int m_nCount;
 	private int m_nPrice;
 	private int m_nReserved;
-	private String m_location;
+	private String m_key;
 
-	public ReservableItem(String location, int count, int price)
+	public ReservableItem(String key, int count, int price)
 	{
 		super();
-		m_location = location;
+		m_key = key;
 		m_nCount = count;
 		m_nPrice = price;
 		m_nReserved = 0;
@@ -54,23 +54,21 @@ public abstract class ReservableItem extends RMItem implements Serializable
 		return m_nReserved;
 	}
 
-	public String getLocation()
+	public String getKey()
 	{
-		return m_location;
+		return m_key;
 	}
 
 	public String toString()
 	{
-		return "RESERVABLEITEM key='" + getKey() + "', location='" + getLocation() +
-			"', count='" + getCount() + "', price='" + getPrice() + "'";
+		return "RESERVABLEITEM key='" + getKey() + "', count='" + getCount() + "', price='" + getPrice() + "'";
 	}
 
-	public abstract String getKey();
 
 	public Object clone()
 	{
 		ReservableItem obj = (ReservableItem)super.clone();
-		obj.m_location = m_location;
+		obj.m_key = m_key;
 		obj.m_nCount = m_nCount;
 		obj.m_nPrice = m_nPrice;
 		obj.m_nReserved = m_nReserved;

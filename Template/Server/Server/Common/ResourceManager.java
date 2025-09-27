@@ -38,139 +38,172 @@ public abstract class ResourceManager implements IResourceManager
 			m_data.put(key, value);
 		}
 	}
-	// Remove the item out of storage
-	protected void removeData(String key) {
-		synchronized(m_data) {
-			m_data.remove(key);
-		}
-	}
+//	// Remove the item out of storage
+//	protected void removeData(String key) {
+//		synchronized(m_data) {
+//			m_data.remove(key);
+//		}
+//	}
 	// Deletes the encar item
-	protected boolean deleteItem(String key) {
-		Trace.info("RM::deleteItem(" + key + ") called");
-		ReservableItem curObj = (ReservableItem)readData(key);
-		// Check if there is such an item in the storage
-		if (curObj == null)
-		{
-			Trace.warn("RM::deleteItem(" + key + ") failed--item doesn't exist");
-			return false;
+//	protected boolean deleteItem(String key) {
+//		Trace.info("RM::deleteItem(" + key + ") called");
+//		ReservableItem curObj = (ReservableItem)readData(key);
+//		// Check if there is such an item in the storage
+//		if (curObj == null)
+//		{
+//			Trace.warn("RM::deleteItem(" + key + ") failed--item doesn't exist");
+//			return false;
+//		}
+//		else
+//		{
+//			if (curObj.getReserved() == 0)
+//			{
+//				removeData(curObj.getKey());
+//				Trace.info("RM::deleteItem(" + key + ") item deleted");
+//				return true;
+//			}
+//			else
+//			{
+//				Trace.info("RM::deleteItem(" + key + ") item can't be deleted because some customers have reserved it");
+//				return false;
+//			}
+//		}
+//	}
+//	// Query the number of available seats/rooms/cars
+//	protected int queryNum(String key) {
+//		Trace.info("RM::queryNum(" + key + ") called");
+//		ReservableItem curObj = (ReservableItem)readData(key);
+//		int value = 0;
+//		if (curObj != null)
+//		{
+//			value = curObj.getCount();
+//		}
+//		Trace.info("RM::queryNum(" + key + ") returns count=" + value);
+//		return value;
+//	}
+//	// Query the price of an item
+//	protected int queryPrice(String key) {
+//		Trace.info("RM::queryPrice(" + key + ") called");
+//		ReservableItem curObj = (ReservableItem)readData(key);
+//		int value = 0;
+//		if (curObj != null)
+//		{
+//			value = curObj.getPrice();
+//		}
+//		Trace.info("RM::queryPrice(" + key + ") returns cost=$" + value);
+//		return value;
+//	}
+//	@Override
+//	// Reserve an item
+//	public boolean reserveItem(int customerID, String key, String location) {
+//		Trace.info("RM::reserveItem(customer=" + customerID + ", " + key + ", " + location + ") called" );
+//		// Read customer object if it exists (and read lock it)
+//		Customer customer = (Customer)readData(Customer.getKey(customerID)); //这里读的是FRM的m_data,故 customer doesn't exist
+//		if (customer == null)
+//		{
+//			Trace.warn("RM::reserveItem(" + customerID + ", " + key + ", " + location + ")  failed--customer doesn't exist");
+//			return false;
+//		}
+//
+//		// Check if the item is available
+//		ReservableItem item = (ReservableItem)readData(key);
+//		if (item == null)
+//		{
+//			Trace.warn("RM::reserveItem(" + customerID + ", " + key + ", " + location + ") failed--item doesn't exist");
+//			return false;
+//		}
+//		else if (item.getCount() == 0)
+//		{
+//			Trace.warn("RM::reserveItem(" + customerID + ", " + key + ", " + location + ") failed--No more items");
+//			return false;
+//		}
+//		else
+//		{
+//			customer.reserve(key, item.getPrice());
+//			writeData(customer.getKey(), customer);
+//
+//			// Decrease the number of available items in the storage
+//			item.setCount(item.getCount() - 1);
+//			item.setReserved(item.getReserved() + 1);
+//			writeData(item.getKey(), item);
+//
+//			Trace.info("RM::reserveItem(" + customerID + ", " + key + ", " + location + ") succeeded");
+//			return true;
+//		}
+//	}
+	@Override
+	public RMItem getItem(int tid, String key) {
+		// First check if this key exists in the transaction data
+		RMItem item = (RMItem) readTransactionData(tid, key);
+		if (item != null) {
+			return item;
 		}
-		else
-		{
-			if (curObj.getReserved() == 0)
-			{
-				removeData(curObj.getKey());
-				Trace.info("RM::deleteItem(" + key + ") item deleted");
-				return true;
-			}
-			else
-			{
-				Trace.info("RM::deleteItem(" + key + ") item can't be deleted because some customers have reserved it");
-				return false;
-			}
-		}
-	}
-	// Query the number of available seats/rooms/cars
-	protected int queryNum(String key) {
-		Trace.info("RM::queryNum(" + key + ") called");
-		ReservableItem curObj = (ReservableItem)readData(key);
-		int value = 0;
-		if (curObj != null)
-		{
-			value = curObj.getCount();
-		}
-		Trace.info("RM::queryNum(" + key + ") returns count=" + value);
-		return value;
-	}
-	// Query the price of an item
-	protected int queryPrice(String key) {
-		Trace.info("RM::queryPrice(" + key + ") called");
-		ReservableItem curObj = (ReservableItem)readData(key);
-		int value = 0;
-		if (curObj != null)
-		{
-			value = curObj.getPrice();
-		}
-		Trace.info("RM::queryPrice(" + key + ") returns cost=$" + value);
-		return value;
+
+		// If not staged, read from the committed data
+		return (RMItem) readData(key);
 	}
 	@Override
-	// Reserve an item
-	public boolean reserveItem(int customerID, String key, String location) {
-		Trace.info("RM::reserveItem(customer=" + customerID + ", " + key + ", " + location + ") called" );
-		// Read customer object if it exists (and read lock it)
-		Customer customer = (Customer)readData(Customer.getKey(customerID)); //这里读的是FRM的m_data,故 customer doesn't exist
-		if (customer == null)
-		{
-			Trace.warn("RM::reserveItem(" + customerID + ", " + key + ", " + location + ")  failed--customer doesn't exist");
-			return false;
-		}
+	public int queryReserved(int tid, String key) throws RemoteException {
+		try {
+			if (!LM.lock(tid, key, LockManager.LockType.READ)) {
+				throw new RemoteException("Lock failed in queryReserved tid=" + tid + " key=" + key);
+			}
 
-		// Check if the item is available
-		ReservableItem item = (ReservableItem)readData(key);
-		if (item == null)
-		{
-			Trace.warn("RM::reserveItem(" + customerID + ", " + key + ", " + location + ") failed--item doesn't exist");
-			return false;
-		}
-		else if (item.getCount() == 0)
-		{
-			Trace.warn("RM::reserveItem(" + customerID + ", " + key + ", " + location + ") failed--No more items");
-			return false;
-		}
-		else
-		{
-			customer.reserve(key, item.getPrice());
-			writeData(customer.getKey(), customer);
+			ReservableItem item = (ReservableItem) readTransactionData(tid, key);
+			if (item == null) {
+				item = (ReservableItem) readData(key);
+			}
 
-			// Decrease the number of available items in the storage
-			item.setCount(item.getCount() - 1);
-			item.setReserved(item.getReserved() + 1);
-			writeData(item.getKey(), item);
+			int reserved = (item == null) ? 0 : item.getReserved();
+			Trace.info("RM::queryReserved(" + tid + ", " + key + ") = " + reserved);
+			return reserved;
 
-			Trace.info("RM::reserveItem(" + customerID + ", " + key + ", " + location + ") succeeded");
-			return true;
+		} catch (DeadlockException e) {
+			throw new RemoteException("Deadlock in queryReserved xid=" + tid, e);
 		}
 	}
 
 	//--------------------------------------------------Flight----------------------------------------------
-    public abstract boolean addFlight(int tid, String flightNum, int flightSeats, int flightPrice) throws RemoteException;
-    public abstract boolean deleteFlight(int tid, int flightNum) throws RemoteException;
-    public abstract int queryFlight(int tid, int flightNumber) throws RemoteException;
-    public abstract int queryFlightPrice(int tid, int flightNumber) throws RemoteException;
-    public abstract boolean reserveFlight(int tid, int customerID, int flightNumber) throws RemoteException;
-    public abstract boolean cancelFlightReservation(int tid, int customerID, Integer f) throws RemoteException;
+//    public abstract boolean addFlight(int tid, String flightNum, int flightSeats, int flightPrice) throws RemoteException;
+//    //public abstract boolean deleteFlight(int tid, int flightNum) throws RemoteException;
+//    public abstract int queryFlight(int tid, int flightNumber) throws RemoteException;
+//    public abstract int queryFlightPrice(int tid, int flightNumber) throws RemoteException;
+//    public abstract boolean reserveFlight(int tid, int customerID, int flightNumber) throws RemoteException;
+//    public abstract boolean cancelFlightReservation(int tid, int customerID, Integer f) throws RemoteException;
 
     //--------------------------------------------------Car---------------------------------
-    public abstract boolean addCars(int tid, String location, int numCars, int price) throws RemoteException;
-    public abstract boolean deleteCars(int tid, String location) throws RemoteException;
-    public abstract int queryCars(int tid, String location) throws RemoteException;
-    public abstract int queryCarsPrice(int tid, String location) throws RemoteException;
-    public abstract boolean reserveCar(int tid, int customerID, String location) throws RemoteException;
+//    public abstract boolean addCars(int tid, String location, int numCars, int price) throws RemoteException;
+//    public abstract boolean deleteCars(int tid, String location) throws RemoteException;
+//    public abstract int queryCars(int tid, String location) throws RemoteException;
+//    public abstract int queryCarsPrice(int tid, String location) throws RemoteException;
+//    public abstract boolean reserveCar(int tid, int customerID, String location) throws RemoteException;
     //public abstract boolean cancelCarReservation(int tid, int customerID, String location) throws RemoteException;
 
 	//------------------------------------------------------Room-------------------------------
-    public abstract boolean addRooms(int tid, String location, int numRooms, int price) throws RemoteException;
-    public abstract boolean deleteRooms(int tid, String location) throws RemoteException;
-    public abstract int queryRooms(int tid, String location) throws RemoteException;
-    public abstract int queryRoomsPrice(int tid, String location) throws RemoteException;
-    public abstract boolean reserveRoom(int tid, int customerID, String location) throws RemoteException;
+//    public abstract boolean addRooms(int tid, String location, int numRooms, int price) throws RemoteException;
+//    public abstract boolean deleteRooms(int tid, String location) throws RemoteException;
+//    public abstract int queryRooms(int tid, String location) throws RemoteException;
+//    public abstract int queryRoomsPrice(int tid, String location) throws RemoteException;
+//    public abstract boolean reserveRoom(int tid, int customerID, String location) throws RemoteException;
     //public abstract boolean cancelRoomReservation(int tid, int customerID, String location) throws RemoteException;
 
 	//---------------------------------------------------Customer---------------------------------------
-    public abstract int newCustomer(int tid) throws RemoteException;
-    public abstract boolean newCustomerID(int tid, int cid) throws RemoteException;
-    public abstract boolean deleteCustomer(int tid, int customerID) throws RemoteException;
-    public abstract String queryCustomerInfo(int tid, int customerID) throws RemoteException;
+//    public abstract int newCustomer(int tid) throws RemoteException;
+//    public abstract boolean newCustomerID(int tid, int cid) throws RemoteException;
+//    public abstract boolean deleteCustomer(int tid, int customerID) throws RemoteException;
+//    public abstract String queryCustomerInfo(int tid, int customerID) throws RemoteException;
 
 	//---------------------------------------------------Transaction----------------------------------------
-	protected RMItem readTransactionData(int tid, String key){
+	@Override
+	public RMItem readTransactionData(int tid, String key){
 		Map<String, RMItem> workspace = transactionData.get(tid); //source
 		if(workspace != null && workspace.containsKey(key)){
 			return workspace.get(key);
 		}
 		return null;
 	}
-	protected boolean writeTransactionData(int tid, String key, RMItem item){
+	@Override
+	public boolean writeTransactionData(int tid, String key, RMItem item){
 		transactionData.computeIfAbsent(tid, k -> new HashMap<>()).put(key, item);
 		return true;
 	}
@@ -204,16 +237,17 @@ public abstract class ResourceManager implements IResourceManager
 		Map<String, RMItem> workspace = transactionData.remove(tid);
 		if (workspace == null) {
 			Trace.info("RM::commit(" + tid + ") nothing to commit");
+			LM.releaseLocks(tid);
 			return true;
 		}
 
 		synchronized (m_data) {
 			for (Map.Entry<String, RMItem> entry : workspace.entrySet()) {
-				if (entry.getValue() == null) {
+				if (entry.getValue() == null) { //delete
 					// staged delete
 					m_data.remove(entry.getKey());
 					Trace.info("RM::commit(" + tid + ") removed key " + entry.getKey());
-				} else {
+				} else { //update
 					m_data.put(entry.getKey(), (RMItem) entry.getValue().clone());
 					Trace.info("RM::commit(" + tid + ") updated key " + entry.getKey());
 				}
@@ -244,24 +278,38 @@ public abstract class ResourceManager implements IResourceManager
 	public boolean rollbackReserve(int tid, int cid, String key) throws RemoteException {
 		Trace.info("RM::rollbackReserve(" + tid + ", cust=" + cid + ", key=" + key + ") called");
 
-		// get this transaction's workspace
-		RMHashMap tData = (RMHashMap) transactionData.get(tid);
-		if (tData == null) {
-			Trace.warn("RM::rollbackReserve(" + tid + ") no staged data found");
-			return false;
+		try {
+			if (!LM.lock(tid, key, LockManager.LockType.WRITE)) {
+				throw new RemoteException("Lock denied in rollbackReserve xid=" + tid + " for key=" + key);
+			}
+
+			ReservableItem item = (ReservableItem) readTransactionData(tid, key);
+			if (item == null) {
+				item = (ReservableItem) readData(key);
+			}
+
+			if (item == null) {
+				Trace.warn("RM::rollbackReserve(" + tid + ", cust=" + cid + ", key=" + key + ") failed -- item not found");
+				return false;
+			}
+
+			if (item.getReserved() <= 0) {
+				Trace.warn("RM::rollbackReserve(" + tid + ", cust=" + cid + ", key=" + key + ") failed -- no reservations");
+				return false;
+			}
+
+			item.setReserved(item.getReserved() - 1);
+			item.setCount(item.getCount() + 1);
+
+			writeTransactionData(tid, key, item);
+
+			Trace.info("RM::rollbackReserve(" + tid + ", cust=" + cid + ", key=" + key + ") succeeded");
+			return true;
+
+		} catch (DeadlockException e) {
+			abort(tid);
+			throw new RemoteException("Deadlock in rollbackReserve xid=" + tid + ", key=" + key, e);
 		}
-
-		// check if key exists in staged data
-		if (!tData.containsKey(key)) {
-			Trace.warn("RM::rollbackReserve(" + tid + ") no staged modification for key=" + key);
-			return false;
-		}
-
-		// remove the staged modification
-		tData.remove(key);
-
-		Trace.info("RM::rollbackReserve(" + tid + ", cust=" + cid + ", key=" + key + ") rolled back staged change");
-		return true;
 	}
 
 }

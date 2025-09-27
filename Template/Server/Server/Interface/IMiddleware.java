@@ -6,6 +6,8 @@ import java.util.Vector;
 
 public interface IMiddleware extends Remote {
 
+    public String getName() throws RemoteException;
+
     // Transaction Lifecycle
     public int startTransaction() throws RemoteException;
     public boolean commitTransaction(int tid) throws RemoteException;
@@ -46,7 +48,5 @@ public interface IMiddleware extends Remote {
     // Bundle
     public boolean bundle(int tid, int customerID, Vector<String> flightNumbers,
                    String location, boolean car, boolean room) throws RemoteException;
-
-    public String getName() throws RemoteException;
 
 }

@@ -20,35 +20,6 @@ public class RMIFlightServer extends FlightResourceManager {
         super(name);
     }
 
-    @Override
-    public boolean addFlight(int tid, String flightNum, int flightSeats, int flightPrice) throws RemoteException {
-        return super.addFlight(tid, flightNum, flightSeats, flightPrice);
-    }
-
-    @Override
-    public boolean deleteFlight(int tid, int flightNum) throws RemoteException {
-        return false;
-    }
-
-    @Override
-    public int queryFlight(int tid, int flightNumber) throws RemoteException {
-        return 0;
-    }
-
-    @Override
-    public int queryFlightPrice(int tid, int flightNumber) throws RemoteException {
-        return 0;
-    }
-
-    @Override
-    public boolean reserveFlight(int tid, int customerID, int flightNumber) throws RemoteException {
-        return false;
-    }
-
-    @Override
-    public boolean cancelFlightReservation(int tid, int customerID, Integer f) throws RemoteException {
-        return false;
-    }
 
     // ------------------------ Stub methods for unsupported operations ------------------------
     // Cars
@@ -143,6 +114,7 @@ public class RMIFlightServer extends FlightResourceManager {
     public boolean customerReserve(int tid, int cid, String key, int count, int price) throws RemoteException {
         throw new UnsupportedOperationException("Flight RM does not handle customers");
     }
+
 
     // ------------------------ Main method for RMI export ------------------------
     public static void main(String[] args) {
