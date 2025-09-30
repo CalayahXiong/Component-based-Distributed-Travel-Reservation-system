@@ -12,11 +12,15 @@ import java.util.Map;
 public abstract class ResourceManager implements IResourceManager
 {
     protected String m_name = "";
-    protected RMHashMap m_data = new RMHashMap(); // Global storage
-    protected LockManager LM = new LockManager();  // Lock manager
-	protected Map<Integer, Map<String, RMItem>> transactionData = new HashMap<>();// Transaction workspace
+    protected RMHashMap m_data; // Global storage
+    protected LockManager LM;  // Lock manager
+	protected Map<Integer, Map<String, RMItem>> transactionData;// Transaction workspace
     public ResourceManager(String name) {
         m_name = name;
+		transactionData = new HashMap<>();
+		m_data = new RMHashMap();
+		LM = new LockManager();
+		LockManager LM = new LockManager();
     }
     public String getName() throws RemoteException {
         return m_name;
@@ -275,8 +279,8 @@ public abstract class ResourceManager implements IResourceManager
 	}
 
 	@Override
-	public boolean rollbackReserve(int tid, int cid, String key) throws RemoteException {
-		Trace.info("RM::rollbackReserve(" + tid + ", cust=" + cid + ", key=" + key + ") called");
+	public boolean rollbackReserve(int tid, int cid, String key, int count) throws RemoteException {
+		Trace.info("RM::rollbackReserve(" + tid + ", cust=" + cid + ", key=" + key + ", count=" + count + ") called");
 
 		try {
 			if (!LM.lock(tid, key, LockManager.LockType.WRITE)) {
@@ -298,8 +302,8 @@ public abstract class ResourceManager implements IResourceManager
 				return false;
 			}
 
-			item.setReserved(item.getReserved() - 1);
-			item.setCount(item.getCount() + 1);
+			item.setReserved(item.getReserved() - count);
+			item.setCount(item.getCount() + count);
 
 			writeTransactionData(tid, key, item);
 

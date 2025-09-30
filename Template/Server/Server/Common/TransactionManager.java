@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class TransactionalManager {
+public class TransactionManager {
 
     public enum TransactionStatus {
         ACTIVE, //ongoing
@@ -86,7 +86,7 @@ public class TransactionalManager {
             return true;
         }
 
-        // notify all RM
+        // notify all RM to abort
         for (IResourceManager rm : rms) {
             try {
                 rm.abort(tid);

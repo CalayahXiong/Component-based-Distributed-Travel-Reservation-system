@@ -74,7 +74,10 @@ public class RMICustomerServer extends CustomerManager  {
     public boolean reserveCar(int tid, int customerID, String location) throws RemoteException {
         throw new UnsupportedOperationException("Customer RM does not handle cars");
     }
-
+    @Override
+    public boolean carExists(int tid, String location) throws RemoteException {
+        throw new UnsupportedOperationException("Customer RM does not handle cars");
+    }
 
     // Rooms
     @Override
@@ -101,6 +104,12 @@ public class RMICustomerServer extends CustomerManager  {
     public boolean reserveRoom(int tid, int customerID, String location) throws RemoteException {
         throw new UnsupportedOperationException("Customer RM does not handle rooms");
     }
+
+    @Override
+    public boolean roomExists(int tid, String location) throws RemoteException {
+        throw new UnsupportedOperationException("Customer RM does not handle rooms");
+    }
+
 
 //    @Override
 //    public boolean cancelRoomReservation(int tid, int customerID, String location) throws RemoteException {

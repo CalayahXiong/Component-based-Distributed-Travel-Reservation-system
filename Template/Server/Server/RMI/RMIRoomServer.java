@@ -100,6 +100,11 @@ public class RMIRoomServer extends RoomResourceManager {
         throw new UnsupportedOperationException("Room RM does not handle cars");
     }
 
+    @Override
+    public boolean carExists(int tid, String location) throws RemoteException {
+        throw new UnsupportedOperationException("Room RM does not handle cars");
+    }
+
 //    @Override
 //    public boolean cancelCarReservation(int tid, int customerID, String location) throws RemoteException {
 //        throw new UnsupportedOperationException("Room RM does not handle cars");

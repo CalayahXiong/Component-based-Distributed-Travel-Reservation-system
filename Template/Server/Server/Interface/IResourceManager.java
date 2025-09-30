@@ -256,16 +256,8 @@ public interface IResourceManager extends Remote
             throws RemoteException;
 
 
-//    /**
-//     * cancel room reservation
-//     * @param tid
-//     * @param customerID
-//     * @param location
-//     * @return
-//     * @throws RemoteException
-//     */
-//    boolean cancelRoomReservation(int tid, int customerID, String location)
-//        throws RemoteException;
+    public boolean roomExists(int tid, String location)
+        throws RemoteException;
 
 
     //----------------------------------------------------Customer-----------------------------
@@ -363,7 +355,9 @@ public interface IResourceManager extends Remote
      * @return
      * @throws RemoteException
      */
-    public boolean rollbackReserve(int tid, int cid, String key)
+    public boolean rollbackReserve(int tid, int cid, String key, int count)
         throws RemoteException;
 
+    public boolean carExists(int tid, String location)
+        throws RemoteException;
 }

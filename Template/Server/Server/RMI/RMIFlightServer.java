@@ -21,100 +21,6 @@ public class RMIFlightServer extends FlightResourceManager {
     }
 
 
-    // ------------------------ Stub methods for unsupported operations ------------------------
-    // Cars
-    @Override
-    public boolean addCars(int tid, String location, int numCars, int price) throws RemoteException {
-        throw new UnsupportedOperationException("Flight RM does not handle cars");
-    }
-
-    @Override
-    public boolean deleteCars(int tid, String location) throws RemoteException {
-        throw new UnsupportedOperationException("Flight RM does not handle cars");
-    }
-
-    @Override
-    public int queryCars(int tid, String location) throws RemoteException {
-        throw new UnsupportedOperationException("Flight RM does not handle cars");
-    }
-
-    @Override
-    public int queryCarsPrice(int tid, String location) throws RemoteException {
-        throw new UnsupportedOperationException("Flight RM does not handle cars");
-    }
-
-    @Override
-    public boolean reserveCar(int tid, int customerID, String location) throws RemoteException {
-        throw new UnsupportedOperationException("Flight RM does not handle cars");
-    }
-
-//    @Override
-//    public boolean cancelCarReservation(int tid, int customerID, String location) throws RemoteException {
-//        throw new UnsupportedOperationException("Flight RM does not handle cars");
-//    }
-
-    // Rooms
-    @Override
-    public boolean addRooms(int tid, String location, int numRooms, int price) throws RemoteException {
-        throw new UnsupportedOperationException("Flight RM does not handle rooms");
-    }
-
-    @Override
-    public boolean deleteRooms(int tid, String location) throws RemoteException {
-        throw new UnsupportedOperationException("Flight RM does not handle rooms");
-    }
-
-    @Override
-    public int queryRooms(int tid, String location) throws RemoteException {
-        throw new UnsupportedOperationException("Flight RM does not handle rooms");
-    }
-
-    @Override
-    public int queryRoomsPrice(int tid, String location) throws RemoteException {
-        throw new UnsupportedOperationException("Flight RM does not handle rooms");
-    }
-
-    @Override
-    public boolean reserveRoom(int tid, int customerID, String location) throws RemoteException {
-        throw new UnsupportedOperationException("Flight RM does not handle rooms");
-    }
-  //  @Override
-//    public boolean cancelRoomReservation(int tid, int customerID, String location) throws RemoteException {
-//        throw new UnsupportedOperationException("Flight RM does not handle rooms");
-//    }
-//
-
-    // Customers
-    @Override
-    public int newCustomer(int tid) throws RemoteException {
-        throw new UnsupportedOperationException("Flight RM does not handle customers");
-    }
-
-    @Override
-    public boolean newCustomerID(int tid, int cid) throws RemoteException {
-        throw new UnsupportedOperationException("Flight RM does not handle customers");
-    }
-
-    @Override
-    public boolean deleteCustomer(int tid, int customerID) throws RemoteException {
-        throw new UnsupportedOperationException("Flight RM does not handle customers");
-    }
-
-    @Override
-    public String queryCustomerInfo(int tid, int customerID) throws RemoteException {
-        throw new UnsupportedOperationException("Flight RM does not handle customers");
-    }
-
-    @Override
-    public boolean customerExists(int tid, int customerID) throws RemoteException {
-        throw new UnsupportedOperationException("Flight RM does not handle customers");
-    }
-
-    @Override
-    public boolean customerReserve(int tid, int cid, String key, int count, int price) throws RemoteException {
-        throw new UnsupportedOperationException("Flight RM does not handle customers");
-    }
-
 
     // ------------------------ Main method for RMI export ------------------------
     public static void main(String[] args) {
@@ -159,5 +65,102 @@ public class RMIFlightServer extends FlightResourceManager {
             e.printStackTrace();
             System.exit(1);
         }
+    }
+
+
+    // ------------------------ Stub methods for unsupported operations ------------------------
+    // Cars
+    @Override
+    public boolean addCars(int tid, String location, int numCars, int price) throws RemoteException {
+        throw new UnsupportedOperationException("Flight RM does not handle cars");
+    }
+
+    @Override
+    public boolean deleteCars(int tid, String location) throws RemoteException {
+        throw new UnsupportedOperationException("Flight RM does not handle cars");
+    }
+
+    @Override
+    public int queryCars(int tid, String location) throws RemoteException {
+        throw new UnsupportedOperationException("Flight RM does not handle cars");
+    }
+
+    @Override
+    public int queryCarsPrice(int tid, String location) throws RemoteException {
+        throw new UnsupportedOperationException("Flight RM does not handle cars");
+    }
+
+    @Override
+    public boolean reserveCar(int tid, int customerID, String location) throws RemoteException {
+        throw new UnsupportedOperationException("Flight RM does not handle cars");
+    }
+
+
+    // Rooms
+    @Override
+    public boolean addRooms(int tid, String location, int numRooms, int price) throws RemoteException {
+        throw new UnsupportedOperationException("Flight RM does not handle rooms");
+    }
+
+    @Override
+    public boolean deleteRooms(int tid, String location) throws RemoteException {
+        throw new UnsupportedOperationException("Flight RM does not handle rooms");
+    }
+
+    @Override
+    public int queryRooms(int tid, String location) throws RemoteException {
+        throw new UnsupportedOperationException("Flight RM does not handle rooms");
+    }
+
+    @Override
+    public int queryRoomsPrice(int tid, String location) throws RemoteException {
+        throw new UnsupportedOperationException("Flight RM does not handle rooms");
+    }
+
+    @Override
+    public boolean reserveRoom(int tid, int customerID, String location) throws RemoteException {
+        throw new UnsupportedOperationException("Flight RM does not handle rooms");
+    }
+
+    @Override
+    public boolean roomExists(int tid, String location) throws RemoteException {
+        throw new UnsupportedOperationException("Flight RM does not handle rooms");
+    }
+
+
+    // Customers
+    @Override
+    public int newCustomer(int tid) throws RemoteException {
+        throw new UnsupportedOperationException("Flight RM does not handle customers");
+    }
+
+    @Override
+    public boolean newCustomerID(int tid, int cid) throws RemoteException {
+        throw new UnsupportedOperationException("Flight RM does not handle customers");
+    }
+
+    @Override
+    public boolean deleteCustomer(int tid, int customerID) throws RemoteException {
+        throw new UnsupportedOperationException("Flight RM does not handle customers");
+    }
+
+    @Override
+    public String queryCustomerInfo(int tid, int customerID) throws RemoteException {
+        throw new UnsupportedOperationException("Flight RM does not handle customers");
+    }
+
+    @Override
+    public boolean customerExists(int tid, int customerID) throws RemoteException {
+        throw new UnsupportedOperationException("Flight RM does not handle customers");
+    }
+
+    @Override
+    public boolean customerReserve(int tid, int cid, String key, int count, int price) throws RemoteException {
+        throw new UnsupportedOperationException("Flight RM does not handle customers");
+    }
+
+    @Override
+    public boolean carExists(int tid, String location) throws RemoteException {
+        throw new UnsupportedOperationException("Flight RM does not handle customers");
     }
 }

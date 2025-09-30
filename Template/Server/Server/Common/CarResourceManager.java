@@ -155,6 +155,25 @@ public abstract class CarResourceManager extends ResourceManager {
         }
     }
 
+    @Override
+    public boolean carExists(int tid, String location) throws RemoteException {
+        String key = Car.getKey(location);
+        try {
+            if (!LM.lock(tid, key, LockManager.LockType.READ)) {
+                throw new RemoteException("Lock failed in querying Car tid=" + tid);
+            }
+
+            Car curObj = (Car) readTransactionData(tid, key);
+            if (curObj == null) {
+                curObj = (Car) readData(key);
+            }
+            return (curObj != null);
+        } catch (DeadlockException e) {
+            throw new RemoteException("Deadlock in checking Car xid=" + tid, e);
+        }
+    }
+
+
 //    @Override
 //    public boolean cancelCarReservation(int tid, int customerID, String location) throws RemoteException {
 //        String key = Car.getKey(location);

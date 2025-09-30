@@ -38,14 +38,22 @@ public class Customer extends RMItem
 
 
 	public String getBill() {
-		String s = "Bill for customer " + m_ID + "\n";
-		for (String key : m_reservations.keySet())
-		{
+		StringBuilder sb = new StringBuilder("Bill for customer " + m_ID + ": ");
+		for (String key : m_reservations.keySet()) {
 			ReservedItem item = (ReservedItem) m_reservations.get(key);
-			s += item.getCount() + " " + item.getReservableItemKey() + " $" + item.getPrice() + "\n";
+			sb.append(item.getCount())
+					.append(" ")
+					.append(item.getReservableItemKey())
+					.append(" $")
+					.append(item.getPrice())
+					.append(" | ");
 		}
-		return s;
+		if (sb.length() > 0 && sb.lastIndexOf("|") == sb.length() - 2) {
+			sb.setLength(sb.length() - 2);
+		}
+		return sb.toString();
 	}
+
 
 	public String toString() {
 		String ret = "--- BEGIN CUSTOMER key='";

@@ -1,14 +1,12 @@
 package Client;
 
-import Server.Interface.*;
+import Server.Interface.IMiddleware;
 
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.rmi.RemoteException;
-import java.rmi.NotBoundException;
-
-import java.util.*;
-import java.io.*;
+import java.util.Vector;
 
 public class RMIClient extends Client
 {
@@ -85,5 +83,131 @@ public class RMIClient extends Client
 			System.exit(1);
 		}
 	}
+
+	@Override
+	protected String invokeRemote(Command cmd, Vector<String> arguments) throws Exception {
+		switch (cmd) {
+			case Start:
+				return String.valueOf(m_middleware.startTransaction());
+
+			case Commit:
+				return m_middleware.commitTransaction(currentTid) ? "committed" : "failed";
+
+			case Abort:
+				return m_middleware.abortTransaction(currentTid) ? "aborted" : "not aborted";
+
+			// -------- Flights --------
+			case AddFlight: {
+				String flightNum = arguments.get(1);
+				int seats = toInt(arguments.get(2));
+				int price = toInt(arguments.get(3));
+				return m_middleware.addFlight(currentTid, flightNum, seats, price) ?
+						"Flight added" : "Flight not added";
+			}
+			case DeleteFlight:
+				return m_middleware.deleteFlight(currentTid, arguments.get(1)) ?
+						"Flight deleted" : "Flight not deleted";
+
+			case QueryFlight:
+				return "Seats available: " + m_middleware.queryFlight(currentTid, arguments.get(1));
+
+			case QueryFlightPrice:
+				return "Flight price: " + m_middleware.queryFlightPrice(currentTid, arguments.get(1));
+
+			// -------- Cars --------
+			case AddCars: {
+				String loc = arguments.get(1);
+				int num = toInt(arguments.get(2));
+				int price = toInt(arguments.get(3));
+				return m_middleware.addCars(currentTid, loc, num, price) ?
+						"Cars added" : "Cars not added";
+			}
+			case DeleteCars:
+				return m_middleware.deleteCars(currentTid, arguments.get(1)) ?
+						"Cars deleted" : "Cars not deleted";
+
+			case QueryCars:
+				return "Cars available: " + m_middleware.queryCars(currentTid, arguments.get(1));
+
+			case QueryCarsPrice:
+				return "Car price: " + m_middleware.queryCarsPrice(currentTid, arguments.get(1));
+
+			// -------- Rooms --------
+			case AddRooms: {
+				String loc = arguments.get(1);
+				int num = toInt(arguments.get(2));
+				int price = toInt(arguments.get(3));
+				return m_middleware.addRooms(currentTid, loc, num, price) ?
+						"Rooms added" : "Rooms not added";
+			}
+			case DeleteRooms:
+				return m_middleware.deleteRooms(currentTid, arguments.get(1)) ?
+						"Rooms deleted" : "Rooms not deleted";
+
+			case QueryRooms:
+				return "Rooms available: " + m_middleware.queryRooms(currentTid, arguments.get(1));
+
+			case QueryRoomsPrice:
+				return "Room price: " + m_middleware.queryRoomsPrice(currentTid, arguments.get(1));
+
+			// -------- Customers --------
+			case AddCustomer:
+				return "Customer ID: " + m_middleware.newCustomer(currentTid);
+
+			case AddCustomerID: {
+				int cid = toInt(arguments.get(1));
+				return m_middleware.newCustomerID(currentTid, cid) ?
+						"Customer " + cid + " added" : "Customer exists";
+			}
+			case DeleteCustomer: {
+				int cid = toInt(arguments.get(1));
+				return m_middleware.deleteCustomer(currentTid, cid) ?
+						"Customer deleted" : "Customer not deleted";
+			}
+			case QueryCustomer: {
+				int cid = toInt(arguments.get(1));
+				return m_middleware.queryCustomerInfo(currentTid, cid);
+			}
+
+			// -------- Reservations --------
+			case ReserveFlight: {
+				int cid = toInt(arguments.get(1));
+				String flight = arguments.get(2);
+				return m_middleware.reserveFlight(currentTid, cid, flight) ?
+						"Flight reserved" : "Flight not reserved";
+			}
+			case ReserveCar: {
+				int cid = toInt(arguments.get(1));
+				String loc = arguments.get(2);
+				return m_middleware.reserveCar(currentTid, cid, loc) ?
+						"Car reserved" : "Car not reserved";
+			}
+			case ReserveRoom: {
+				int cid = toInt(arguments.get(1));
+				String loc = arguments.get(2);
+				return m_middleware.reserveRoom(currentTid, cid, loc) ?
+						"Room reserved" : "Room not reserved";
+			}
+			case Bundle: {
+				int cid = toInt(arguments.get(1));
+				Vector<String> flights = new Vector<>();
+				for (int i = 2; i < arguments.size() - 3; i++) {
+					flights.add(arguments.get(i));
+				}
+				String loc = arguments.get(arguments.size() - 3);
+				boolean car = toBoolean(arguments.get(arguments.size() - 2));
+				boolean room = toBoolean(arguments.get(arguments.size() - 1));
+				return m_middleware.bundle(currentTid, cid, flights, loc, car, room) ?
+						"Bundle reserved" : "Bundle not reserved";
+			}
+			case Quit: {
+				return "Client quit";
+			}
+
+			default:
+				return "Unsupported command: " + cmd;
+		}
+	}
+
 }
 

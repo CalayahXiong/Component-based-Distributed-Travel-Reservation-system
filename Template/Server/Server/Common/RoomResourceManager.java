@@ -154,6 +154,23 @@ public abstract class RoomResourceManager extends ResourceManager {
             throw new RemoteException("Deadlock in reserveRoom xid=" + tid, e);
         }
     }
+    @Override
+    public boolean roomExists(int tid, String location) throws RemoteException {
+        String key = Room.getKey(location);
+        try {
+            if (!LM.lock(tid, key, LockManager.LockType.READ)) {
+                throw new RemoteException("Lock failed in querying Room tid=" + tid);
+            }
+
+            Room curObj = (Room) readTransactionData(tid, key);
+            if (curObj == null) {
+                curObj = (Room) readData(key);
+            }
+            return (curObj != null);
+        } catch (DeadlockException e) {
+            throw new RemoteException("Deadlock in checking Room xid=" + tid, e);
+        }
+    }
 
 //    @Override
 //    public boolean cancelRoomReservation(int tid, int customerID, String location) throws RemoteException {
